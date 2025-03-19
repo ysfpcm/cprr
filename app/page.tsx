@@ -2,13 +2,13 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowRight, Award, Calendar, Clock, Heart, Users } from "lucide-react"
+import { ArrowRight, Award, Calendar, Clock, Heart, Star, Users } from "lucide-react"
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-red-600">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-red-500 to-red-600">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <motion.div
             className="flex flex-col items-center space-y-4 text-center"
@@ -21,7 +21,7 @@ export default function Home() {
                 Anytime CPR Health Services
               </h1>
               <p className="mx-auto max-w-[700px] text-white md:text-xl">
-                Professional CPR, First Aid, and Life-Saving Training for Individuals and Organizations
+                "We're ready when you're ready!"
               </p>
             </div>
             <div className="space-x-4">
@@ -38,6 +38,35 @@ export default function Home() {
                 Contact Us
               </Link>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Coming Soon Section */}
+      <section className="w-full py-8 md:py-12 bg-gradient-to-br from-blue-400 to-blue-600">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <motion.div
+            className="flex flex-col items-center space-y-2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="inline-flex items-center justify-center p-1 bg-white/10 rounded-full mb-2">
+              <Star className="h-5 w-5 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white">Coming Soon: ACLS and PALS Classes</h2>
+            <p className="text-white/90 max-w-[700px]">
+              We're expanding our offerings to include Advanced Cardiovascular Life Support (ACLS) and Pediatric
+              Advanced Life Support (PALS) certifications. Join our waitlist to be notified when these classes become
+              available.
+            </p>
+            <Link
+              href="/waitlist"
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-white px-6 text-sm font-medium text-hospitality-600 shadow transition-colors hover:bg-gray-100"
+            >
+              Join Waitlist
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -156,8 +185,8 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <div className="p-2 bg-red-100 rounded-full">
-                  <Award className="h-6 w-6 text-red-600" />
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Award className="h-6 w-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold">Certified Instructors</h3>
                 <p className="text-gray-500">
@@ -170,8 +199,8 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <div className="p-2 bg-red-100 rounded-full">
-                  <Clock className="h-6 w-6 text-red-600" />
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Clock className="h-6 w-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold">Flexible Scheduling</h3>
                 <p className="text-gray-500">Classes available at your convenience, including evenings and weekends.</p>
@@ -182,8 +211,8 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <div className="p-2 bg-red-100 rounded-full">
-                  <Users className="h-6 w-6 text-red-600" />
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Users className="h-6 w-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold">Small Class Sizes</h3>
                 <p className="text-gray-500">Personalized attention ensures you master life-saving techniques.</p>

@@ -9,23 +9,12 @@ export default function ServicesPage() {
     {
       icon: Heart,
       title: "CPR Training",
-      description: "Learn life-saving CPR techniques from certified instructors",
+      description: "Learn life-saving CPR for healthcare providers",
       features: [
         "Adult, Child, and Infant CPR",
         "Hands-on practice with mannequins",
         "AED (Automated External Defibrillator) training",
         "2-year certification upon completion",
-      ],
-    },
-    {
-      icon: Shield,
-      title: "First Aid Certification",
-      description: "Comprehensive first aid training for workplace safety",
-      features: [
-        "Wound care and bleeding control",
-        "Burn treatment and bandaging techniques",
-        "Fracture and sprain management",
-        "Emergency response protocols",
       ],
     },
     {
@@ -37,6 +26,17 @@ export default function ServicesPage() {
         "Airway management",
         "Team-based resuscitation",
         "Healthcare provider certification",
+      ],
+    },
+    {
+      icon: Shield,
+      title: "First Aid Certification",
+      description: "Comprehensive first aid training for workplace safety",
+      features: [
+        "Wound care and bleeding control",
+        "Burn treatment and bandaging techniques",
+        "Fracture and sprain management",
+        "Emergency response protocols",
       ],
     },
     {
@@ -126,7 +126,7 @@ export default function ServicesPage() {
                 </div>
                 <div className="mt-auto p-6 pt-0">
                   <Link
-                    href="/schedule"
+                    href={`/schedule?service=${service.title.toLowerCase().replace(/ /g, '-')}`}
                     className="inline-flex w-full h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-red-700"
                   >
                     Schedule Training
