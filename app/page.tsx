@@ -21,7 +21,7 @@ export default function Home() {
                 Anytime CPR Health Services
               </h1>
               <p className="mx-auto max-w-[700px] text-white md:text-xl">
-                "We're ready when you're ready!"
+                &quot;We&apos;re ready when you&apos;re ready!&quot;
               </p>
             </div>
             <div className="space-x-4">
@@ -56,7 +56,7 @@ export default function Home() {
             </div>
             <h2 className="text-2xl font-bold text-white">Coming Soon: ACLS and PALS Classes</h2>
             <p className="text-white/90 max-w-[700px]">
-              We're expanding our offerings to include Advanced Cardiovascular Life Support (ACLS) and Pediatric
+              We&apos;re expanding our offerings to include Advanced Cardiovascular Life Support (ACLS) and Pediatric
               Advanced Life Support (PALS) certifications. Join our waitlist to be notified when these classes become
               available.
             </p>

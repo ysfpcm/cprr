@@ -82,7 +82,7 @@ export default function ContactPage() {
               <div>
                 <h2 className="text-3xl font-bold tracking-tighter">Get In Touch</h2>
                 <p className="text-gray-500 mt-2">
-                  Fill out the form below and we'll get back to you as soon as possible.
+                  Fill out the form below and we&apos;ll get back to you as soon as possible.
                 </p>
               </div>
 
@@ -201,7 +201,7 @@ export default function ContactPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  Thank you for contacting us. We'll get back to you soon!
+                  Thank you for contacting us. We&apos;ll get back to you soon!
                 </motion.div>
               )}
             </motion.form>

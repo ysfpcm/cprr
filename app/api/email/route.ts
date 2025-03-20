@@ -1,5 +1,4 @@
 import sgMail from '@sendgrid/mail'
-import { NextResponse } from 'next/server'
 
 // Initialize SendGrid with your API key
 try {
@@ -182,19 +181,29 @@ export async function POST(request: Request) {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
-    } catch (sendError: any) {
+    } catch (sendError: unknown) {
       console.error('SendGrid error details:', JSON.stringify(sendError, null, 2))
       
       // Check for sender verification issues
       let errorDetails = 'Unknown SendGrid error';
       let userFriendlyMessage = 'Failed to send confirmation email';
       
-      if (sendError.response && sendError.response.body) {
-        console.error('SendGrid API response:', sendError.response.body)
+      // Type guard for SendGrid error response
+      if (
+        typeof sendError === 'object' && 
+        sendError !== null && 
+        'response' in sendError &&
+        sendError.response &&
+        typeof sendError.response === 'object' &&
+        'body' in sendError.response
+      ) {
+        const sgError = sendError as { response: { body: { errors?: Array<{ message: string }> } } };
+        console.error('SendGrid API response:', sgError.response.body)
         
         // Check for specific SendGrid errors
-        if (sendError.response.body.errors && sendError.response.body.errors.length > 0) {
-          const firstError = sendError.response.body.errors[0];
+        const errors = sgError.response.body.errors;
+        if (errors && errors.length > 0) {
+          const firstError = errors[0];
           errorDetails = firstError.message || errorDetails;
           
           // Specific check for sender verification error

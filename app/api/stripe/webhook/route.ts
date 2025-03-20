@@ -77,7 +77,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
         let errorData: unknown = 'Unable to parse error response'
         try {
           errorData = await emailResponse.json()
-        } catch (_parseError) {
+        } catch {
           try {
             errorData = await emailResponse.text()
           } catch (textError) {

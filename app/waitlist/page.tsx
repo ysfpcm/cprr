@@ -140,7 +140,7 @@ export default function WaitlistPage() {
                     <div>
                       <h4 className="font-medium">AHA Certification</h4>
                       <p className="text-sm text-gray-500">
-                        Upon successful completion, you'll receive American Heart Association certification valid for
+                        Upon successful completion, you&apos;ll receive American Heart Association certification valid for
                         two years.
                       </p>
                     </div>
@@ -202,7 +202,7 @@ export default function WaitlistPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="interest" className="text-sm font-medium">
-                  I'm interested in
+                  I&apos;m interested in
                 </label>
                 <select
                   id="interest"

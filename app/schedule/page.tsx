@@ -6,11 +6,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Calendar, Check, CreditCard } from "lucide-react"
 import { format } from "date-fns"
-import { loadStripe } from "@stripe/stripe-js"
 import { useRouter } from "next/navigation"
-
-// Initialize Stripe using your publishable key
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "")
 
 export default function SchedulePage() {
   const router = useRouter()

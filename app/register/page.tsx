@@ -43,7 +43,7 @@ export default function RegisterPage() {
         // Redirect to login page
         router.push("/login?registered=true")
       }, 1500)
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.")
       setIsSubmitting(false)
     }

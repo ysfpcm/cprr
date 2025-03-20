@@ -80,7 +80,7 @@ export default function BookingConfirmationPage() {
           try {
             const errorResponse = await response.json();
             errorText = JSON.stringify(errorResponse);
-          } catch (e) {
+          } catch {
             errorText = await response.text();
           }
           console.error("Failed to send confirmation email:", errorText);
@@ -166,7 +166,7 @@ export default function BookingConfirmationPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 h-1.5 w-1.5 rounded-full bg-green-600 mt-1.5"></span>
-                      <span>No prior experience is necessary - we'll teach you everything you need to know</span>
+                      <span>No prior experience is necessary - we&apos;ll teach you everything you need to know</span>
                     </li>
                   </ul>
                 </div>
