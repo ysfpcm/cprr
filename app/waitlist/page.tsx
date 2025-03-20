@@ -202,7 +202,7 @@ export default function WaitlistPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="interest" className="text-sm font-medium">
-                  I&apos;m interested in
+                  I'm interested in
                 </label>
                 <select
                   id="interest"
@@ -258,7 +258,7 @@ export default function WaitlistPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  Thank you for joining our waitlist! We'll notify you as soon as our ACLS and PALS classes are
+                  Thank you for joining our waitlist! We&apos;ll notify you as soon as our ACLS and PALS classes are
                   available.
                 </motion.div>
               )}

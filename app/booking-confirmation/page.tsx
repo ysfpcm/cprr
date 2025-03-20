@@ -134,7 +134,7 @@ export default function BookingConfirmationPage() {
               <h2 className="text-2xl font-bold">Your Training is Scheduled</h2>
               <p className="text-gray-500 mt-2">
                 {emailSent 
-                  ? "We have sent a confirmation email with all the details. Please check your inbox."
+                  ? "We&apos;ve sent a confirmation email with all the details. Please check your inbox."
                   : "Your booking is confirmed. You should receive a confirmation email shortly."}
               </p>
               {error && (

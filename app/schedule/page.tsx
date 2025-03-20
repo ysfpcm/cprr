@@ -6,11 +6,8 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Calendar, Check, CreditCard } from "lucide-react"
 import { format } from "date-fns"
-import { useRouter } from "next/navigation"
 
 export default function SchedulePage() {
-  const router = useRouter()
-
   // --- State ---
   const [date, setDate] = useState<Date | null>(null)
   const [showCalendar, setShowCalendar] = useState(false)
