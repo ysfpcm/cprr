@@ -23,7 +23,7 @@ async function testEmailAPI() {
     console.log('Sending test email with payload:', emailPayload);
     
     // Call your email API endpoint directly
-    const response = await fetch('http://localhost:3000/api/email', {
+    const response = await fetch('https://cprr.vercel.app/api/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -18,9 +18,9 @@ function getBaseUrl(request: Request): string {
     return `https://${process.env.VERCEL_URL}`;
   }
   
-  // Fallback to request origin or localhost
+  // Fallback to request origin or production URL
   const url = new URL(request.url);
-  return url.origin || 'http://localhost:3000';
+  return url.origin || 'https://cprr.vercel.app';
 }
 
 // Helper to process checkout.session.completed event
