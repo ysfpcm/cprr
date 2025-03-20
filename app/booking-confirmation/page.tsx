@@ -3,10 +3,11 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Calendar, CheckCircle, Mail } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
-export default function BookingConfirmationPage() {
+// Create a client component that uses useSearchParams
+function BookingConfirmation() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
   const [emailSent, setEmailSent] = useState(false)
@@ -207,6 +208,15 @@ export default function BookingConfirmationPage() {
         </div>
       </section>
     </div>
+  )
+}
+
+// Export the page component with Suspense boundary
+export default function BookingConfirmationPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading confirmation details...</div>}>
+      <BookingConfirmation />
+    </Suspense>
   )
 }
 
