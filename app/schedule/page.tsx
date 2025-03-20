@@ -150,8 +150,18 @@ export default function SchedulePage() {
     setStep(2)
   }
 
-  // --- Checkout Session Creation & Redirect ---
-  const handleConfirmBooking = async () => {
+  const handleSubmitBooking = async () => {
+    // Your validation code...
+    if (!date) {
+      setErrors({
+        ...errors,
+        date: 'Please select a date',
+      })
+      return
+    }
+    
+    // Other validation...
+    
     setIsSubmitting(true)
 
     try {
@@ -181,6 +191,23 @@ export default function SchedulePage() {
         default:
           amount = 7500 * participants // Default to $75
       }
+
+      // Save booking details to localStorage before redirecting
+      const bookingData = {
+        email: formData.email,
+        customerEmail: formData.email,
+        name: formData.name,
+        customerName: formData.name,
+        service: getServiceName(formData.service),
+        date: date ? format(date, 'MMMM d, yyyy') : '',
+        time: formData.time,
+        participants: formData.participants,
+      }
+      
+      // Save to localStorage for retrieval after payment
+      localStorage.setItem('pendingBooking', JSON.stringify(bookingData))
+      
+      console.log('Saved booking data to localStorage:', bookingData)
 
       // Create Stripe checkout session
       const response = await fetch('/api/stripe/checkout', {
@@ -215,9 +242,8 @@ export default function SchedulePage() {
       }
 
     } catch (error) {
-      console.error('Checkout Error:', error)
-      setPaymentError('Failed to create checkout session. Please try again.')
-    } finally {
+      console.error('Booking error:', error)
+      setPaymentError('There was a problem processing your booking. Please try again.')
       setIsSubmitting(false)
     }
   }
@@ -514,7 +540,7 @@ export default function SchedulePage() {
                     </button>
                     <button
                       type="button"
-                      onClick={handleConfirmBooking}
+                      onClick={handleSubmitBooking}
                       disabled={isSubmitting}
                       className="inline-flex h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-red-700 disabled:opacity-50"
                     >

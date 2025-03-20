@@ -6,6 +6,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
 })
 
+// Helper function to get the base URL, ensuring it works in production
+function getBaseUrl(request: Request): string {
+  // Try to get from environment variable first
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // For Vercel deployments
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Fallback to request origin or localhost
+  const url = new URL(request.url);
+  return url.origin || 'http://localhost:3000';
+}
+
 export async function POST(request: Request) {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -16,6 +33,10 @@ export async function POST(request: Request) {
     
     // Log the received data
     console.log('Received request body:', body)
+
+    // Ensure we have a valid base URL for redirects
+    const baseUrl = getBaseUrl(request);
+    console.log('Using base URL for redirects:', baseUrl);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -34,8 +55,8 @@ export async function POST(request: Request) {
         },
       ],
       customer_email: body.customerEmail,
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/schedule`,
+      success_url: `${baseUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/schedule`,
       metadata: {
         service: body.service,
         date: body.date,
@@ -56,8 +77,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Stripe API error:', error)
     return NextResponse.json(
-         { error: (error as Error).message || 'Unknown Stripe error' },
+      { error: (error as Error).message || 'Unknown Stripe error' },
       { status: 500 }
-     )
+    )
   }
 } 

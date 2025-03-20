@@ -3,8 +3,98 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Calendar, CheckCircle, Mail } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 export default function BookingConfirmationPage() {
+  const searchParams = useSearchParams()
+  const sessionId = searchParams.get("session_id")
+  const [emailSent, setEmailSent] = useState(false)
+  const [error, setError] = useState("")
+  
+  useEffect(() => {
+    const sendConfirmationEmail = async () => {
+      // Only attempt to send email if we have a session ID
+      if (!sessionId) {
+        console.log("No session ID found in URL");
+        return;
+      }
+      
+      console.log("Session ID from URL:", sessionId);
+      
+      try {
+        // Get the booking data from localStorage
+        const storedBookingData = localStorage.getItem("pendingBooking");
+        let bookingData = null;
+        
+        if (!storedBookingData) {
+          console.warn("No booking data found in localStorage");
+          setError("Booking information not available. Please check your email for confirmation or contact customer support.");
+          return; // In production, we shouldn't proceed without valid booking data
+        } else {
+          try {
+            bookingData = JSON.parse(storedBookingData);
+            console.log("Retrieved booking data from localStorage:", bookingData);
+          } catch (parseError) {
+            console.error("Failed to parse booking data from localStorage:", parseError);
+            setError("Unable to process booking information. Please contact customer support.");
+            return;
+          }
+        }
+        
+        // Ensure we have required email data - don't use fallbacks for customer email
+        if (!bookingData.email) {
+          console.error("No email found in booking data");
+          setError("Missing contact information. Please contact customer support.");
+          return;
+        }
+        
+        // Construct a properly formatted request with required fields
+        const emailRequest = {
+          email: bookingData.email, // This should be the customer's actual email
+          name: bookingData.name || "Valued Customer",
+          service: bookingData.service || "CPR Training",
+          date: bookingData.date || "As scheduled",
+          time: bookingData.time || "As scheduled",
+          participants: bookingData.participants || "1"
+        };
+        
+        console.log("Sending email request with data:", emailRequest);
+        
+        // Send the confirmation email directly
+        const response = await fetch("/api/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(emailRequest),
+        });
+        
+        if (response.ok) {
+          setEmailSent(true);
+          // Clear the pending booking data
+          localStorage.removeItem("pendingBooking");
+          console.log("Confirmation email sent successfully to:", emailRequest.email);
+        } else {
+          let errorText = "";
+          try {
+            const errorResponse = await response.json();
+            errorText = JSON.stringify(errorResponse);
+          } catch (e) {
+            errorText = await response.text();
+          }
+          console.error("Failed to send confirmation email:", errorText);
+          setError("There was a problem sending your confirmation email. Please contact us for assistance.");
+        }
+      } catch (error) {
+        console.error("Error sending confirmation email:", error);
+        setError("An unexpected error occurred. Please contact us to confirm your booking.");
+      }
+    };
+    
+    sendConfirmationEmail();
+  }, [sessionId]);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -43,8 +133,15 @@ export default function BookingConfirmationPage() {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold">Your Training is Scheduled</h2>
               <p className="text-gray-500 mt-2">
-                We've sent a confirmation email with all the details. Please check your inbox.
+                {emailSent 
+                  ? "We've sent a confirmation email with all the details. Please check your inbox."
+                  : "Your booking is confirmed. You should receive a confirmation email shortly."}
               </p>
+              {error && (
+                <p className="text-red-500 mt-2">
+                  {error}
+                </p>
+              )}
             </div>
 
             <div className="space-y-6">
