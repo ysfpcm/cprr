@@ -47,7 +47,7 @@ export default function AboutPage() {
               </p>
               <p className="text-gray-500">
                 What started as a small operation has grown into a trusted provider of comprehensive health and safety
-                training services. We're proud to have trained thousands of individuals and organizations, equipping
+                training services. We&apos;re proud to have trained thousands of individuals and organizations, equipping
                 them with the skills and confidence to respond effectively in emergency situations.
               </p>
               <p className="text-gray-500">

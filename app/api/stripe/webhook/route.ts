@@ -74,10 +74,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
       console.log('Email API response status:', emailResponse.status)
       
       if (!emailResponse.ok) {
-        let errorData: any = 'Unable to parse error response'
+        let errorData: unknown = 'Unable to parse error response'
         try {
           errorData = await emailResponse.json()
-        } catch (parseError) {
+        } catch (_parseError) {
           try {
             errorData = await emailResponse.text()
           } catch (textError) {
