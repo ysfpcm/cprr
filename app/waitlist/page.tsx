@@ -93,7 +93,7 @@ export default function WaitlistPage() {
               <div>
                 <h2 className="text-3xl font-bold tracking-tighter">Coming Soon</h2>
                 <p className="text-gray-500 mt-2">
-                  We're excited to announce that we'll soon be offering Advanced Cardiovascular Life Support (ACLS) and
+                  We&apos;re excited to announce that we&apos;ll soon be offering Advanced Cardiovascular Life Support (ACLS) and
                   Pediatric Advanced Life Support (PALS) certification classes.
                 </p>
               </div>

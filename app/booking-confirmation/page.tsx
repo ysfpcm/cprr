@@ -134,7 +134,7 @@ export default function BookingConfirmationPage() {
               <h2 className="text-2xl font-bold">Your Training is Scheduled</h2>
               <p className="text-gray-500 mt-2">
                 {emailSent 
-                  ? "We've sent a confirmation email with all the details. Please check your inbox."
+                  ? "We have sent a confirmation email with all the details. Please check your inbox."
                   : "Your booking is confirmed. You should receive a confirmation email shortly."}
               </p>
               {error && (
@@ -166,7 +166,7 @@ export default function BookingConfirmationPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 h-1.5 w-1.5 rounded-full bg-green-600 mt-1.5"></span>
-                      <span>No prior experience is necessary - we&apos;ll teach you everything you need to know</span>
+                      <span>No prior experience is necessary - we will teach you everything you need to know</span>
                     </li>
                   </ul>
                 </div>

@@ -16,7 +16,6 @@ export default function SchedulePage() {
   const [showCalendar, setShowCalendar] = useState(false)
   const [step, setStep] = useState(1) // Step 1: Form, Step 2: Review, Step 3: Processing
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
   const [paymentError, setPaymentError] = useState("")
   
   const [formData, setFormData] = useState({
@@ -642,7 +641,9 @@ export default function SchedulePage() {
                       <Check className="h-4 w-4 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-sm leading-relaxed">"{testimonial.quote}"</p>
+                      <p className="text-sm text-gray-500">
+                        &quot;The CPR training was excellent. The instructor was knowledgeable and made the material easy to understand. I feel confident in my ability to respond in an emergency.&quot;
+                      </p>
                       <p className="mt-2 text-sm font-medium">{testimonial.name}</p>
                       <p className="text-xs text-gray-500">{testimonial.title}</p>
                     </div>

@@ -95,9 +95,6 @@ export async function POST(request: Request) {
     const fromEmail = process.env.SENDGRID_VERIFIED_SENDER || process.env.SENDGRID_FROM_EMAIL || 'info@anytimecpr.com'
     console.log('Using sender email:', fromEmail, '(Is environment variable set:', !!process.env.SENDGRID_VERIFIED_SENDER || !!process.env.SENDGRID_FROM_EMAIL, ')')
     
-    // Special handling for production vs development
-    const isProduction = process.env.NODE_ENV === 'production';
-    
     // Create email content
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">

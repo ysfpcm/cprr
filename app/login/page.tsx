@@ -43,7 +43,7 @@ export default function LoginPage() {
 
       // Redirect to dashboard or previous page
       router.push("/dashboard")
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.")
       setIsSubmitting(false)
     }

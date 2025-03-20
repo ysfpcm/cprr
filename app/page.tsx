@@ -175,7 +175,7 @@ export default function Home() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Why Choose Anytime CPR?</h2>
               <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
-                We're committed to providing the highest quality training with flexible scheduling options.
+                We&apos;re committed to providing the highest quality training with flexible scheduling options.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12 pt-8">
