@@ -202,7 +202,7 @@ export default function WaitlistPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="interest" className="text-sm font-medium">
-                  I'm interested in
+                  I&apos;m interested in
                 </label>
                 <select
                   id="interest"
