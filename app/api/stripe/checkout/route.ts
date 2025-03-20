@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         },
       ],
       customer_email: body.customerEmail,
-      success_url: `${baseUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(body.customerEmail || '')}`,
       cancel_url: `${baseUrl}/schedule`,
       metadata: {
         service: body.service,
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
         time: body.time,
         participants: body.participants,
         customerName: body.customerName,
+        customerEmail: body.customerEmail,
       },
     })
 

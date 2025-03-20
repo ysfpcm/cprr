@@ -196,10 +196,14 @@ export default function SchedulePage() {
         participants: formData.participants,
       }
       
-      // Save to localStorage for retrieval after payment
-      localStorage.setItem('pendingBooking', JSON.stringify(bookingData))
-      
-      console.log('Saved booking data to localStorage:', bookingData)
+      // Save to localStorage for retrieval after payment with error handling
+      try {
+        localStorage.setItem('pendingBooking', JSON.stringify(bookingData))
+        console.log('Saved booking data to localStorage:', bookingData)
+      } catch (storageError) {
+        // Log but continue - we'll use URL params as fallback
+        console.error('Failed to save to localStorage:', storageError)
+      }
 
       // Create Stripe checkout session
       const response = await fetch('/api/stripe/checkout', {

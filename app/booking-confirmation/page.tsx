@@ -12,52 +12,89 @@ function BookingConfirmation() {
   const sessionId = searchParams.get("session_id")
   const [emailSent, setEmailSent] = useState(false)
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
   
   useEffect(() => {
+    // Safe check for browser environment before using localStorage
+    if (typeof window === 'undefined') {
+      console.log("Running on server, skipping localStorage operations");
+      return;
+    }
+    
     const sendConfirmationEmail = async () => {
+      setIsLoading(true);
+      
       // Only attempt to send email if we have a session ID
       if (!sessionId) {
         console.log("No session ID found in URL");
+        setError("Missing session information. Please contact customer support if you need assistance.");
+        setIsLoading(false);
         return;
       }
       
       console.log("Session ID from URL:", sessionId);
       
       try {
-        // Get the booking data from localStorage
-        const storedBookingData = localStorage.getItem("pendingBooking");
+        // Get the booking data from localStorage with safe access
+        let storedBookingData;
+        try {
+          storedBookingData = localStorage.getItem("pendingBooking");
+          console.log("Retrieved raw booking data:", storedBookingData);
+        } catch (storageError) {
+          console.error("Error accessing localStorage:", storageError);
+          setError("Unable to access booking information. Please contact customer support.");
+          setIsLoading(false);
+          return;
+        }
+        
         let bookingData = null;
         
         if (!storedBookingData) {
           console.warn("No booking data found in localStorage");
-          setError("Booking information not available. Please check your email for confirmation or contact customer support.");
-          return; // In production, we shouldn't proceed without valid booking data
+          
+          // Fallback to session ID only - attempt to send a minimal confirmation
+          // This helps with cases where users refresh the confirmation page or access it directly
+          bookingData = { 
+            email: searchParams.get("email") || "", 
+            sessionId: sessionId 
+          };
+          
+          if (!bookingData.email) {
+            setError("Booking information not available. Please check your email for confirmation or contact customer support.");
+            setIsLoading(false);
+            return;
+          }
+          
+          console.log("Using fallback booking data from URL params:", bookingData);
         } else {
           try {
             bookingData = JSON.parse(storedBookingData);
-            console.log("Retrieved booking data from localStorage:", bookingData);
+            console.log("Parsed booking data from localStorage:", bookingData);
           } catch (parseError) {
             console.error("Failed to parse booking data from localStorage:", parseError);
             setError("Unable to process booking information. Please contact customer support.");
+            setIsLoading(false);
             return;
           }
         }
         
-        // Ensure we have required email data - don't use fallbacks for customer email
+        // Ensure we have required email data
         if (!bookingData.email) {
           console.error("No email found in booking data");
           setError("Missing contact information. Please contact customer support.");
+          setIsLoading(false);
           return;
         }
         
         // Construct a properly formatted request with required fields
         const emailRequest = {
-          email: bookingData.email, // This should be the customer's actual email
+          email: bookingData.email,
           name: bookingData.name || "Valued Customer",
           service: bookingData.service || "CPR Training",
           date: bookingData.date || "As scheduled",
           time: bookingData.time || "As scheduled",
-          participants: bookingData.participants || "1"
+          participants: bookingData.participants || "1",
+          sessionId: sessionId // Include the session ID for reference
         };
         
         console.log("Sending email request with data:", emailRequest);
@@ -74,7 +111,11 @@ function BookingConfirmation() {
         if (response.ok) {
           setEmailSent(true);
           // Clear the pending booking data
-          localStorage.removeItem("pendingBooking");
+          try {
+            localStorage.removeItem("pendingBooking");
+          } catch (e) {
+            console.warn("Could not clear localStorage:", e);
+          }
           console.log("Confirmation email sent successfully to:", emailRequest.email);
         } else {
           let errorText = "";
@@ -90,11 +131,13 @@ function BookingConfirmation() {
       } catch (error) {
         console.error("Error sending confirmation email:", error);
         setError("An unexpected error occurred. Please contact us to confirm your booking.");
+      } finally {
+        setIsLoading(false);
       }
     };
     
     sendConfirmationEmail();
-  }, [sessionId]);
+  }, [sessionId, searchParams]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -133,11 +176,15 @@ function BookingConfirmation() {
           >
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold">Your Training is Scheduled</h2>
-              <p className="text-gray-500 mt-2">
-                {emailSent 
-                  ? "We&apos;ve sent a confirmation email with all the details. Please check your inbox."
-                  : "Your booking is confirmed. You should receive a confirmation email shortly."}
-              </p>
+              {isLoading ? (
+                <p className="text-gray-500 mt-2">Loading confirmation details...</p>
+              ) : (
+                <p className="text-gray-500 mt-2">
+                  {emailSent 
+                    ? "We&apos;ve sent a confirmation email with all the details. Please check your inbox."
+                    : "Your booking is confirmed. You should receive a confirmation email shortly."}
+                </p>
+              )}
               {error && (
                 <p className="text-red-500 mt-2">
                   {error}

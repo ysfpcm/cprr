@@ -36,7 +36,8 @@ export async function POST(request: Request) {
       service, 
       date, 
       time, 
-      participants 
+      participants,
+      sessionId  // Include session ID as a possible parameter
     } = body
 
     // Log incoming request for debugging
@@ -46,7 +47,8 @@ export async function POST(request: Request) {
       service,
       date,
       time,
-      participants
+      participants,
+      sessionId
     })
 
     // Check if essential fields are present
@@ -68,11 +70,27 @@ export async function POST(request: Request) {
       console.error('SendGrid API key not configured')
       return new Response(JSON.stringify({ 
         error: 'Email service not properly configured',
-        details: 'Missing API key'
+        supportInfo: 'Please contact support for assistance with your booking.'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    // Set default values for missing fields to ensure the email still works
+    const customerName = name || 'Valued Customer'
+    const serviceType = service || 'CPR Training'
+    const bookingDate = date || 'as scheduled'
+    const bookingTime = time || 'at the reserved time'
+    const numParticipants = participants || '1'
+    
+    // Create a subject line that works even with minimal data
+    let subjectLine = `Your CPR Training Confirmation`
+    if (service) {
+      subjectLine = `Your ${service} Confirmation`
+    }
+    if (sessionId) {
+      subjectLine += ` - Ref: ${sessionId.substring(0, 8)}`
     }
 
     // Format date to be more readable if it's in ISO format
@@ -103,16 +121,16 @@ export async function POST(request: Request) {
         </div>
         
         <div style="padding: 20px;">
-          <p>Hello ${name || 'Valued Customer'},</p>
+          <p>Hello ${customerName},</p>
           
           <p>Thank you for booking your CPR training with Anytime CPR & Health Services. Your booking has been confirmed!</p>
           
           <div style="background-color: #f9f9f9; border-radius: 5px; padding: 15px; margin: 20px 0;">
             <h3 style="margin-top: 0; color: #166534;">Booking Details</h3>
-            <p><strong>Service:</strong> ${service || 'CPR Training'}</p>
-            <p><strong>Date:</strong> ${formattedDate || 'As scheduled'}</p>
-            <p><strong>Time:</strong> ${time || 'As scheduled'}</p>
-            <p><strong>Participants:</strong> ${participants || '1'}</p>
+            <p><strong>Service:</strong> ${serviceType}</p>
+            <p><strong>Date:</strong> ${formattedDate || bookingDate}</p>
+            <p><strong>Time:</strong> ${bookingTime}</p>
+            <p><strong>Participants:</strong> ${numParticipants}</p>
           </div>
           
           <h3 style="color: #166534;">What's Next?</h3>
@@ -139,17 +157,18 @@ export async function POST(request: Request) {
     const emailData = {
       to: email,
       from: fromEmail,
-      subject: 'Booking Confirmation - Anytime CPR & Health Services',
+      subject: subjectLine,
       html: emailContent,
       // Use template if you have one set up
       ...(process.env.SENDGRID_TEMPLATE_ID && {
         templateId: process.env.SENDGRID_TEMPLATE_ID,
         dynamicTemplateData: {
-          name: name || 'Valued Customer',
-          service: service || 'CPR Training',
-          date: formattedDate || 'As scheduled',
-          time: time || 'As scheduled',
-          participants: participants || '1',
+          name: customerName,
+          service: serviceType,
+          date: formattedDate || bookingDate,
+          time: bookingTime,
+          participants: numParticipants,
+          sessionId: sessionId,
         }
       })
     }
@@ -157,7 +176,7 @@ export async function POST(request: Request) {
     console.log('Attempting to send email with data:', {
       to: email,
       from: fromEmail,
-      subject: 'Booking Confirmation - Anytime CPR & Health Services'
+      subject: subjectLine
     })
 
     try {
@@ -167,57 +186,74 @@ export async function POST(request: Request) {
       }
       
       // Attempt to send the email
-      const [response] = await sgMail.send(emailData)
-      console.log('SendGrid API response code:', response?.statusCode)
-      console.log('Email sent successfully to:', email)
+      const response = await sgMail.send(emailData)
       
-      return new Response(JSON.stringify({ 
-        success: true,
-        message: 'Email sent successfully' 
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    } catch (sendError: unknown) {
-      console.error('SendGrid error details:', JSON.stringify(sendError, null, 2))
+      // Log successful email send
+      console.log('Confirmation email sent successfully to:', email)
+      console.log('Email response:', response)
       
-      // Check for sender verification issues
-      let errorDetails = 'Unknown SendGrid error';
-      let userFriendlyMessage = 'Failed to send confirmation email';
-      
-      // Type guard for SendGrid error response
-      if (
-        typeof sendError === 'object' && 
-        sendError !== null && 
-        'response' in sendError &&
-        sendError.response &&
-        typeof sendError.response === 'object' &&
-        'body' in sendError.response
-      ) {
-        const sgError = sendError as { response: { body: { errors?: Array<{ message: string }> } } };
-        console.error('SendGrid API response:', sgError.response.body)
-        
-        // Check for specific SendGrid errors
-        const errors = sgError.response.body.errors;
-        if (errors && errors.length > 0) {
-          const firstError = errors[0];
-          errorDetails = firstError.message || errorDetails;
-          
-          // Specific check for sender verification error
-          if (errorDetails.includes('from address does not match a verified Sender Identity')) {
-            userFriendlyMessage = 'Email configuration error: Sender not verified';
-            console.error('CRITICAL: SendGrid sender identity not verified. Please verify the sender email address in your SendGrid account.');
+      // Return detailed success response
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Confirmation email sent successfully',
+          recipient: email,
+          details: {
+            service: serviceType,
+            date: formattedDate || bookingDate,
+            time: bookingTime,
+            participants: numParticipants,
+            ...(sessionId && { reference: sessionId })
+          }
+        }),
+        {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
           }
         }
-      }
+      )
+    } catch (error) {
+      // Enhanced error handling and logging
+      console.error('Failed to send confirmation email:', error)
       
-      return new Response(JSON.stringify({ 
-        error: userFriendlyMessage,
-        details: errorDetails
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      // Determine if it's a SendGrid error or other type
+      const isSendGridError = error && 
+        typeof error === 'object' && 
+        error !== null &&
+        'response' in error && 
+        error.response && 
+        typeof error.response === 'object' &&
+        error.response !== null &&
+        'body' in error.response;
+      
+      // Define a type for the SendGrid error structure
+      type SendGridErrorResponse = {
+        response: {
+          body: unknown;
+        };
+      };
+      
+      const errorDetails = isSendGridError 
+        ? JSON.stringify((error as SendGridErrorResponse).response.body) 
+        : String(error);
+        
+      return new Response(
+        JSON.stringify({
+          error: 'Failed to send confirmation email',
+          message: 'There was a problem sending your confirmation email. Please contact us for assistance.',
+          details: errorDetails,
+          timestamp: new Date().toISOString()
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
     }
   } catch (error) {
     console.error('Email sending failed:', error)
