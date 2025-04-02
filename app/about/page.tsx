@@ -143,63 +143,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
-        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
-          <motion.div
-            className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Our Instructors</h2>
-            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
-              Meet our team of certified professionals dedicated to providing exceptional training.
-            </p>
-          </motion.div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                name: "Sarah Thompson",
-                title: "Lead CPR Instructor",
-                bio: "Former ER nurse with 15+ years of experience in emergency medicine. Certified in Advanced Cardiac Life Support and Pediatric Advanced Life Support.",
-              },
-              {
-                name: "Michael Rodriguez",
-                title: "First Aid Specialist",
-                bio: "Former paramedic with extensive experience in emergency response. Specializes in workplace safety and first aid training for corporate clients.",
-              },
-              {
-                name: "Dr. James Chen",
-                title: "BLS Instructor",
-                bio: "Board-certified physician with a passion for medical education. Specializes in training healthcare professionals in advanced life support techniques.",
-              },
-            ].map((instructor, index) => (
-              <motion.div
-                key={instructor.name}
-                className="flex flex-col items-center space-y-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className="relative h-40 w-40 overflow-hidden rounded-full">
-                  <Image
-                    src="/placeholder.svg?height=160&width=160"
-                    alt={instructor.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="text-center">
-                  <h3 className="text-xl font-bold">{instructor.name}</h3>
-                  <p className="text-sm text-gray-500">{instructor.title}</p>
-                  <p className="mt-2 text-sm text-gray-500">{instructor.bio}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100">

@@ -9,6 +9,9 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Lock, Mail } from "lucide-react"
 
+// Admin emails that are allowed to access the dashboard
+const ADMIN_EMAILS = ["marlx0879@gmail.com", "info@anytimecpr.com"]
+
 export default function LoginPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
@@ -28,6 +31,37 @@ export default function LoginPage() {
     setIsSubmitting(true)
     setError("")
 
+    // Check if this is an admin login attempt
+    if (ADMIN_EMAILS.includes(formData.email)) {
+      try {
+        // Send verification code to admin email
+        const response = await fetch("/api/auth/admin-verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: formData.email }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          setError(data.error || "Failed to send verification code")
+          setIsSubmitting(false)
+          return
+        }
+
+        // Redirect to verification page
+        router.push(`/admin-verify?email=${encodeURIComponent(formData.email)}`)
+      } catch (err) {
+        console.error("Error:", err)
+        setError("An error occurred. Please try again.")
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    // Regular user login
     try {
       const result = await signIn("credentials", {
         redirect: false,
@@ -139,15 +173,6 @@ export default function LoginPage() {
                 {isSubmitting ? "Signing in..." : "Sign In"}
               </button>
             </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-500">
-                Don&apos;t have an account?{" "}
-                <Link href="/register" className="text-red-600 hover:text-red-800 font-medium">
-                  Sign up
-                </Link>
-              </p>
-            </div>
 
             <div className="text-center mt-6">
               <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">

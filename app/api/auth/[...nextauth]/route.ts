@@ -11,6 +11,20 @@ const users = [
     // This is "password" hashed with bcrypt
     password: "$2a$10$8Pn/nSO8wZ9kuyp9nVy.XOZaJG0XvOKn7a9Wn1t9PFG.X5TE.Ysuy",
   },
+  {
+    id: "2",
+    name: "Admin User",
+    email: "marlx0879@gmail.com",
+    password: "$2a$10$mQNWXJT2aRyLJJC9whYLke/dJ7uoUawY5/yQfanwolSVu9MPUcOT.",
+    isAdmin: true,
+  },
+  {
+    id: "3",
+    name: "Admin User",
+    email: "info@anytimecpr.com",
+    password: "$2a$10$mQNWXJT2aRyLJJC9whYLke/dJ7uoUawY5/yQfanwolSVu9MPUcOT.",
+    isAdmin: true,
+  },
 ]
 
 const handler = NextAuth({
@@ -43,6 +57,7 @@ const handler = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
+          isAdmin: user.isAdmin || false,
         }
       },
     }),
@@ -55,14 +70,24 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      if (token?.sub) {
-        session.user = {
+      // Use type assertion to handle the extended properties
+      return {
+        ...session,
+        user: {
           ...session.user,
-          id: token.sub ?? "", // Ensure id is always a string
-        };
+          id: token.sub as string,
+          isAdmin: token.isAdmin as boolean,
+        }
       }
-      return session;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        // Cast user to include our custom properties
+        const customUser = user as typeof user & { isAdmin?: boolean }
+        token.isAdmin = customUser.isAdmin || false
+      }
+      return token
+    }
   },
   
 })

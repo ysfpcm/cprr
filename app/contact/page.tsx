@@ -15,22 +15,35 @@ export default function ContactPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState("")
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setSubmitSuccess(false)
+    setSubmitError("")
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Form submitted:", formData)
-      setIsSubmitting(false)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message')
+      }
+
       setSubmitSuccess(true)
-
       // Reset form
       setFormData({
         name: "",
@@ -38,12 +51,18 @@ export default function ContactPage() {
         phone: "",
         message: "",
       })
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setSubmitError(error instanceof Error ? error.message : 'Failed to send message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
 
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSubmitSuccess(false)
-      }, 5000)
-    }, 1000)
+    // Reset success/error messages after 5 seconds
+    setTimeout(() => {
+      setSubmitSuccess(false)
+      setSubmitError("")
+    }, 5000)
   }
 
   return (
@@ -202,6 +221,17 @@ export default function ContactPage() {
                   exit={{ opacity: 0, y: -10 }}
                 >
                   Thank you for contacting us. We&apos;ll get back to you soon!
+                </motion.div>
+              )}
+              
+              {submitError && (
+                <motion.div
+                  className="p-4 rounded-md bg-red-50 text-red-700 border border-red-200"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  {submitError}
                 </motion.div>
               )}
             </motion.form>

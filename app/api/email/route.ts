@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       date, 
       time, 
       participants,
-      sessionId  // Include session ID as a possible parameter
+      sessionId
     } = body
 
     // Log incoming request for debugging
@@ -48,14 +48,14 @@ export async function POST(request: Request) {
       date,
       time,
       participants,
-      sessionId
+      sessionId,
+      environment: process.env.NODE_ENV,
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
     })
 
     // Check if essential fields are present
     if (!email) {
       console.error('Missing required field: email')
-      
-      // Return more detailed error for debugging
       return new Response(JSON.stringify({ 
         error: 'Missing required field: email',
         receivedBody: JSON.stringify(body)
@@ -76,6 +76,14 @@ export async function POST(request: Request) {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    // Get the from email from environment and log validation
+    const fromEmail = process.env.SENDGRID_VERIFIED_SENDER || process.env.SENDGRID_FROM_EMAIL || 'info@anytimecpr.com'
+    console.log('Using sender email:', fromEmail, {
+      hasVerifiedSender: !!process.env.SENDGRID_VERIFIED_SENDER,
+      hasFromEmail: !!process.env.SENDGRID_FROM_EMAIL,
+      environment: process.env.NODE_ENV
+    })
 
     // Set default values for missing fields to ensure the email still works
     const customerName = name || 'Valued Customer'
@@ -109,10 +117,6 @@ export async function POST(request: Request) {
       // Continue with original date value
     }
 
-    // Get the from email from environment and log validation
-    const fromEmail = process.env.SENDGRID_VERIFIED_SENDER || process.env.SENDGRID_FROM_EMAIL || 'info@anytimecpr.com'
-    console.log('Using sender email:', fromEmail, '(Is environment variable set:', !!process.env.SENDGRID_VERIFIED_SENDER || !!process.env.SENDGRID_FROM_EMAIL, ')')
-    
     // Create email content
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">

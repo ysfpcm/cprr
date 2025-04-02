@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // Helper function to get the base URL, ensuring it works in production
 function getBaseUrl(request: Request): string {
-  // Try to get from environment variable first
+  // Try to get from environment variable first (most reliable option)
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     return process.env.NEXT_PUBLIC_BASE_URL;
   }
@@ -18,9 +18,17 @@ function getBaseUrl(request: Request): string {
     return `https://${process.env.VERCEL_URL}`;
   }
   
-  // Fallback to request origin or production URL
-  const url = new URL(request.url);
-  return url.origin || 'https://cprr.vercel.app';
+  // Fallback to request origin
+  try {
+    const url = new URL(request.url);
+    return url.origin;
+  } catch (error) {
+    console.warn('Failed to parse URL from request, using default:', error);
+    // Last resort fallback - this should be avoided in favor of NEXT_PUBLIC_BASE_URL
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://cprr.vercel.app' 
+      : 'http://localhost:3000';
+  }
 }
 
 // Helper to process checkout.session.completed event
@@ -55,6 +63,41 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
     console.log('Sending email request to:', emailUrl)
     
     try {
+      // Save booking data for the dashboard
+      const saveBookingUrl = `${baseUrl}/api/bookings/save`
+      console.log('Saving booking to the dashboard:', saveBookingUrl)
+      
+      try {
+        const bookingResponse = await fetch(saveBookingUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            clientName: customerName || 'Valued Customer',
+            email: customerEmail,
+            phone: '', // We don't have phone from Stripe, would need to be collected during booking
+            service,
+            participants: Number(participants) || 1,
+            date: new Date().toISOString(), // Convert the date string to proper ISO format
+            time,
+            status: 'upcoming',
+            notes: `Booking from Stripe checkout, session ID: ${session.id}`,
+            sessionId: session.id
+          }),
+        })
+        
+        console.log('Booking save response status:', bookingResponse.status)
+        
+        if (!bookingResponse.ok) {
+          console.error('Failed to save booking data for dashboard:', await bookingResponse.text())
+        } else {
+          console.log('Booking data saved successfully for dashboard')
+        }
+      } catch (bookingError) {
+        console.error('Error saving booking data:', bookingError)
+      }
+      
       const emailResponse = await fetch(emailUrl, {
         method: 'POST',
         headers: {

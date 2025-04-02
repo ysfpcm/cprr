@@ -33,57 +33,74 @@ function BookingConfirmation() {
       }
       
       console.log("Session ID from URL:", sessionId);
+      const email = searchParams.get("email") || "";
       
       try {
-        // Get the booking data from localStorage with safe access
-        let storedBookingData;
-        try {
-          storedBookingData = localStorage.getItem("pendingBooking");
-          console.log("Retrieved raw booking data:", storedBookingData);
-        } catch (storageError) {
-          console.error("Error accessing localStorage:", storageError);
-          setError("Unable to access booking information. Please contact customer support.");
-          setIsLoading(false);
-          return;
-        }
-        
         let bookingData = null;
         
-        if (!storedBookingData) {
-          console.warn("No booking data found in localStorage");
-          
-          // Fallback to session ID only - attempt to send a minimal confirmation
-          // This helps with cases where users refresh the confirmation page or access it directly
-          bookingData = { 
-            email: searchParams.get("email") || "", 
-            sessionId: sessionId 
-          };
-          
-          if (!bookingData.email) {
-            setError("Booking information not available. Please check your email for confirmation or contact customer support.");
-            setIsLoading(false);
-            return;
-          }
-          
-          console.log("Using fallback booking data from URL params:", bookingData);
-        } else {
-          try {
+        // First, try to get booking data from localStorage
+        try {
+          const storedBookingData = localStorage.getItem("pendingBooking");
+          if (storedBookingData) {
             bookingData = JSON.parse(storedBookingData);
-            console.log("Parsed booking data from localStorage:", bookingData);
-          } catch (parseError) {
-            console.error("Failed to parse booking data from localStorage:", parseError);
-            setError("Unable to process booking information. Please contact customer support.");
-            setIsLoading(false);
-            return;
+            console.log("Using booking data from localStorage:", bookingData);
           }
+        } catch (storageError) {
+          console.warn("Error accessing localStorage:", storageError);
+          // Continue without localStorage data - we'll use the URL params instead
         }
         
-        // Ensure we have required email data
-        if (!bookingData.email) {
-          console.error("No email found in booking data");
-          setError("Missing contact information. Please contact customer support.");
+        // If no booking data from localStorage, use the URL params as fallback
+        if (!bookingData) {
+          console.log("No valid booking data from localStorage, using URL params");
+          bookingData = { 
+            email: email,
+            sessionId: sessionId 
+          };
+        }
+        
+        // If we still don't have an email, show an error
+        if (!email && !bookingData.email) {
+          setError("Missing contact information. Please contact customer support for assistance.");
           setIsLoading(false);
           return;
+        }
+        
+        // Ensure we have an email (prefer localStorage data, but fallback to URL param)
+        if (!bookingData.email && email) {
+          bookingData.email = email;
+        }
+        
+        // Save the booking to the dashboard
+        try {
+          console.log("Saving booking data to dashboard");
+          const bookingResponse = await fetch("/api/bookings/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              clientName: bookingData.name || "Valued Customer",
+              email: bookingData.email,
+              phone: bookingData.phone || "",
+              service: bookingData.service || "CPR Training",
+              participants: parseInt(bookingData.participants || "1", 10),
+              date: bookingData.date || new Date().toISOString(),
+              time: bookingData.time || "12:00 PM",
+              status: "upcoming",
+              notes: `Booking confirmed via payment page. Session ID: ${sessionId}`,
+              sessionId: sessionId
+            }),
+          });
+          
+          if (bookingResponse.ok) {
+            console.log("Booking saved successfully to dashboard");
+          } else {
+            console.error("Failed to save booking to dashboard:", await bookingResponse.text());
+          }
+        } catch (bookingError) {
+          console.error("Error saving booking to dashboard:", bookingError);
+          // Continue with email sending even if booking save fails
         }
         
         // Construct a properly formatted request with required fields
@@ -99,7 +116,7 @@ function BookingConfirmation() {
         
         console.log("Sending email request with data:", emailRequest);
         
-        // Send the confirmation email directly
+        // Use a relative URL instead of a hardcoded one
         const response = await fetch("/api/email", {
           method: "POST",
           headers: {
@@ -181,7 +198,7 @@ function BookingConfirmation() {
               ) : (
                 <p className="text-gray-500 mt-2">
                   {emailSent 
-                    ? "We&apos;ve sent a confirmation email with all the details. Please check your inbox."
+                    ? "We sent a confirmation email with all the details. Please check your inbox."
                     : "Your booking is confirmed. You should receive a confirmation email shortly."}
                 </p>
               )}

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import { ArrowRight, Award, Calendar, Clock, Heart, Star, Users } from "lucide-react"
 
@@ -8,8 +9,9 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-red-500 to-red-600">
-        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+      <section className="relative w-full py-32 md:py-56 lg:py-72 bg-[url('/bwcpr.jpeg')] bg-cover bg-center bg-no-repeat">
+        <div className="absolute inset-0 bg-black/50" aria-hidden="true"></div>
+        <div className="relative container px-4 md:px-6 mx-auto max-w-7xl">
           <motion.div
             className="flex flex-col items-center space-y-4 text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -43,7 +45,7 @@ export default function Home() {
       </section>
 
       {/* Coming Soon Section */}
-      <section className="w-full py-8 md:py-12 bg-gradient-to-br from-blue-400 to-blue-600">
+      <section className="w-full py-6 md:py-8 bg-gradient-to-br from-blue-400 to-blue-600">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <motion.div
             className="flex flex-col items-center space-y-2 text-center"
@@ -81,8 +83,14 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <div className="p-2 bg-red-100 rounded-full">
-                <Heart className="h-6 w-6 text-red-600" />
+              <div>
+                <Image
+                  src="/cptrain.jpeg"
+                  alt="CPR Training"
+                  width={400}
+                  height={200}
+                  className="rounded-lg"
+                />
               </div>
               <h3 className="text-xl font-bold">CPR Training</h3>
               <p className="text-gray-500">
@@ -96,8 +104,14 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <div className="p-2 bg-red-100 rounded-full">
-                <Award className="h-6 w-6 text-red-600" />
+              <div>
+                <Image
+                  src="/cprcert.png"
+                  alt="First Aid Certification"
+                  width={400}
+                  height={200}
+                  className="rounded-lg"
+                />
               </div>
               <h3 className="text-xl font-bold">First Aid Certification</h3>
               <p className="text-gray-500">
@@ -110,8 +124,14 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <div className="p-2 bg-red-100 rounded-full">
-                <Users className="h-6 w-6 text-red-600" />
+              <div>
+                <Image
+                  src="/cprcorp.png"
+                  alt="Group & Corporate Training"
+                  width={400}
+                  height={200}
+                  className="rounded-lg"
+                />
               </div>
               <h3 className="text-xl font-bold">Group & Corporate Training</h3>
               <p className="text-gray-500">
