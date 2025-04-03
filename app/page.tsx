@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { ArrowRight, Award, Calendar, Clock, Heart, Star, Users } from "lucide-react"
+import { ArrowRight, Award, Calendar, Clock, Star, Users } from "lucide-react"
 
 export default function Home() {
   return (

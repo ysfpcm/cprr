@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Lock } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import bcrypt from "bcryptjs"
 
 export default function ResetPasswordPage() {
   const router = useRouter()

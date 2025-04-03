@@ -156,7 +156,7 @@ export default function AdminVerifyPage() {
 
             <div className="mb-4 text-center">
               <p className="text-sm text-gray-600">
-                We've sent a verification code to <span className="font-medium">{email}</span>
+                We sent a verification code to <span className="font-medium">{email}</span>
               </p>
               <p className="text-sm mt-2 font-medium">
                 Code expires in: <span className={isExpired ? "text-red-600" : "text-blue-600"}>{formatTime(countdown)}</span>

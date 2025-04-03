@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <p className="text-xs text-gray-500">
-                  Enter your email address and we'll send you a link to reset your password.
+                  Enter your email address and we will send you a link to reset your password.
                   <br />
                   <br />
                   <strong>Note:</strong> Only admin accounts are authorized to reset passwords.

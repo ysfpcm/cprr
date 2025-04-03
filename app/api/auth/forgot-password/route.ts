@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 // Verify the reset token
 export async function PUT(request: NextRequest) {
   try {
-    const { email, token, oldPassword, newPassword } = await request.json()
+    const { email, token } = await request.json()
 
     // Check if the email has a stored token
     if (!resetTokenStore.has(email)) {
