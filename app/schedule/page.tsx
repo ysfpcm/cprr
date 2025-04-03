@@ -33,10 +33,10 @@ export default function SchedulePage() {
   // --- For mapping service or price display on the front-end ---
   const getServicePrice = (serviceId: string) => {
     switch (serviceId) {
-      case "cpr":
-        return "$75"
+      case "cpr-first-aid":
+        return "$110"
       case "first-aid":
-        return "$85"
+        return "$95"
       case "bls":
         return "$95"
       case "pediatric":
@@ -46,18 +46,18 @@ export default function SchedulePage() {
       case "test":
         return "$0.50"
       default:
-        return "$75"
+        return "$95"
     }
   }
 
   const getServiceName = (serviceId: string) => {
     switch (serviceId) {
-      case "cpr":
-        return "CPR Training"
+      case "cpr-first-aid":
+        return "CPR & First Aid Certification (AHA Guidelines)"
       case "first-aid":
-        return "First Aid Certification"
+        return "First Aid Certification (AHA Guidelines)"
       case "bls":
-        return "BLS Certification"
+        return "BLS for Healthcare Providers"
       case "pediatric":
         return "Pediatric Training"
       case "babysitter":
@@ -72,12 +72,42 @@ export default function SchedulePage() {
   const availableTimeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"]
 
   const services = [
-    { id: "cpr", name: "CPR Training", price: "$75 per person" },
-    { id: "first-aid", name: "First Aid Certification", price: "$85 per person" },
-    { id: "bls", name: "BLS for Healthcare Providers", price: "$95 per person" },
-    { id: "pediatric", name: "Pediatric Training", price: "$85 per person" },
-    { id: "babysitter", name: "Babysitter Course", price: "$65 per person" },
-    { id: "test", name: "Test Payment (DELETE LATER)", price: "$0.50 per person" },
+    {
+      id: "bls",
+      name: "BLS for Healthcare Providers",
+      price: "$95 per person",
+      description: "AHA-compliant Basic Life Support for healthcare professionals. Advanced CPR, airway, team skills.",
+    },
+    {
+      id: "cpr-first-aid",
+      name: "CPR & First Aid Certification (AHA Guidelines)",
+      price: "$110 per person",
+      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid following AHA guidelines. 2-year certification.",
+    },
+    {
+      id: "first-aid",
+      name: "First Aid Certification (AHA Guidelines)",
+      price: "$95 per person",
+      description: "Manage injuries like bleeding, burns, fractures per AHA guidelines. Workplace safety focus.",
+    },
+    {
+      id: "pediatric",
+      name: "Pediatric Training",
+      price: "$85 per person",
+      description: "Specialized training focusing on CPR and First Aid for infants and children.",
+    },
+    {
+      id: "babysitter",
+      name: "Babysitter Course",
+      price: "$65 per person",
+      description: "Essential skills for childcare providers, including child safety, basic first aid, and CPR.",
+    },
+    {
+      id: "test",
+      name: "Test Payment (DELETE LATER)",
+      price: "$0.50 per person",
+      description: "For testing payment integration only.",
+    },
   ]
 
   // --- Handle service selection from query params ---
@@ -85,9 +115,8 @@ export default function SchedulePage() {
     const params = new URLSearchParams(window.location.search)
     const serviceParam = params.get("service")
     if (serviceParam) {
-      // E.g. map "cpr-training" -> "cpr"
       const serviceMap: { [key: string]: string } = {
-        "cpr-training": "cpr",
+        "cpr-first-aid-certification": "cpr-first-aid",
         "bls-certification": "bls",
         "first-aid-certification": "first-aid",
         "pediatric-training": "pediatric",
@@ -162,26 +191,26 @@ export default function SchedulePage() {
       let amount = 0
 
       switch (formData.service) {
-        case "cpr":
-          amount = 7500 * participants // $75 per person
+        case "cpr-first-aid":
+          amount = 11000 * participants
           break
         case "first-aid":
-          amount = 8500 * participants // $85 per person
+          amount = 9500 * participants
           break
         case "bls":
-          amount = 9500 * participants // $95 per person
+          amount = 9500 * participants
           break
         case "pediatric":
-          amount = 8500 * participants // $85 per person
+          amount = 8500 * participants
           break
         case "babysitter":
-          amount = 6500 * participants // $65 per person
+          amount = 6500 * participants
           break
         case "test":
-          amount = 50 * participants // $0.50 per person
+          amount = 50 * participants
           break
         default:
-          amount = 7500 * participants // Default to $75
+          amount = 9500 * participants
       }
 
       // Save booking details to localStorage before redirecting
@@ -288,9 +317,9 @@ export default function SchedulePage() {
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <h3 className="text-xl font-bold mb-2">Available Services</h3>
                   <p className="text-sm text-gray-500 mb-4">Choose the training you need</p>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {services.map((service) => (
-                      <div key={service.id} className="flex items-center space-x-2">
+                      <div key={service.id} className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                         <input
                           type="radio"
                           id={service.id}
@@ -298,11 +327,14 @@ export default function SchedulePage() {
                           value={service.id}
                           checked={formData.service === service.id}
                           onChange={handleChange}
-                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 mt-1 flex-shrink-0"
                         />
-                        <label htmlFor={service.id} className="flex flex-col">
-                          <span className="font-medium">{service.name}</span>
-                          <span className="text-sm text-gray-500">{service.price}</span>
+                        <label htmlFor={service.id} className="flex-1 cursor-pointer">
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-gray-800">{service.name}</span>
+                            <span className="text-sm text-gray-700 font-medium ml-2">{service.price}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                         </label>
                       </div>
                     ))}
@@ -317,11 +349,13 @@ export default function SchedulePage() {
               {/* Form */}
               <motion.form
                 onSubmit={handleSubmitForm}
-                className="space-y-6"
+                className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 shadow-sm mt-24"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
               >
+                <h3 className="text-xl font-bold">Enter Your Details</h3>
+                <p className="text-sm text-gray-500 mb-4">Please provide your contact and booking information.</p>
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium">
                     Full Name
