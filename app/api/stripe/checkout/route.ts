@@ -26,7 +26,7 @@ function getBaseUrl(request: Request): string {
     console.warn('Failed to parse URL from request, using default:', error);
     // Last resort fallback - this should be avoided in favor of NEXT_PUBLIC_BASE_URL
     return process.env.NODE_ENV === 'production' 
-      ? 'https://cprr.vercel.app' 
+      ? 'https://www.anytimecprhealthservices.com/' 
       : 'http://localhost:3000';
   }
 }
