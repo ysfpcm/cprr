@@ -12,7 +12,19 @@ interface SimplybookEvent {
   name: string;
   duration: number;
   price: number;
-  [key: string]: any; // For other properties we don't need to explicitly define
+  [key: string]: unknown; // For other properties we don't need to explicitly define
+}
+
+// Define interface for SimplyBook.me API response
+interface SimplybookResponse {
+  result?: unknown;
+  error?: {
+    message: string;
+    data?: {
+      field?: string;
+    };
+  };
+  [key: string]: unknown;
 }
 
 // This API endpoint retrieves all bookings for the admin dashboard
@@ -138,7 +150,7 @@ function formatSimplybookDate(dateString: string): string | null {
         
         if (monthDayYearMatch) {
             console.log("Detected 'Month Day, Year' format");
-            const [_, month, day, year] = monthDayYearMatch;
+            const [, month, day, year] = monthDayYearMatch;
             // Convert to a format that parse() can handle
             const formattedInput = `${month} ${day}, ${year}`;
             parsedDate = parse(formattedInput, 'MMMM d, yyyy', new Date());
@@ -166,7 +178,7 @@ function formatSimplybookDate(dateString: string): string | null {
             try {
                 parsedDate = parse(dateString, 'MMMM d, yyyy', new Date());
                 console.log(`Successfully parsed with 'MMMM d, yyyy' format: ${parsedDate.toISOString()}`);
-            } catch (formatError) {
+            } catch (error) {
                 console.warn(`Could not parse date "${dateString}" with format 'MMMM d, yyyy', trying direct parse...`);
                 // Fallback to direct Date parsing (less reliable)
                 parsedDate = new Date(dateString);
@@ -376,7 +388,7 @@ async function checkTimeSlotAvailability(
 // and sends the details to simplybook.me
 export async function POST(request: Request) {
   let savedBooking: Booking | null = null; // Define here to be accessible in catch/finally if needed
-  let simplybookResult: any = null; // To store simplybook response
+  let simplybookResult: SimplybookResponse | null = null; // To store simplybook response
 
   try {
     const bookingData = await request.json();
@@ -542,12 +554,12 @@ export async function POST(request: Request) {
 
         simplybookResult = await simplybookResponse.json(); // Store result
 
-        if (!simplybookResponse.ok || simplybookResult.error) {
+        if (!simplybookResponse.ok || (simplybookResult && simplybookResult.error)) {
           console.error("SimplyBook.me 'book' API Error Response:", simplybookResult);
-          const errorMessage = simplybookResult.error?.message || `HTTP status ${simplybookResponse.status}`;
+          const errorMessage = simplybookResult?.error?.message || `HTTP status ${simplybookResponse.status}`;
           
           // Handle specific error cases
-          if (simplybookResult.error?.data?.field === 'phone') {
+          if (simplybookResult?.error?.data?.field === 'phone') {
             console.warn("Phone number format issue detected by SimplyBook.me");
             // If this is a phone validation error, try to fix or provide guidance
             console.error(`Phone value that caused validation error: \"${clientData.phone}\" (Original input: \"${bookingData.phone}\")`);
@@ -617,7 +629,7 @@ export async function POST(request: Request) {
           // Optionally: Decide if internal save should proceed despite SimplyBook failure
           // For now, we will continue to internal save but the message will reflect the issue
         } else {
-           console.log("Successfully created booking on SimplyBook.me:", simplybookResult.result);
+           console.log("Successfully created booking on SimplyBook.me:", simplybookResult?.result);
         }
 
     } catch (simplybookError) {
@@ -691,11 +703,11 @@ export async function POST(request: Request) {
 
     // Determine overall success message based on SimplyBook result
     let message = "Booking processed and saved internally.";
-    let suggestions = bookingData.suggestedAlternatives || [];
+    const suggestions = bookingData.suggestedAlternatives || [];
     
-    if (simplybookResult?.result) {
+    if (simplybookResult && simplybookResult.result) {
          message = "Booking successful on SimplyBook.me and saved internally.";
-    } else if (simplybookResult?.error) {
+    } else if (simplybookResult && simplybookResult.error) {
          if (simplybookResult.error.message === 'Selected event id is not available') {
            message = "Booking saved internally, but the selected service is not available for the chosen date and time on SimplyBook.me. Your appointment will be reviewed by our team.";
            

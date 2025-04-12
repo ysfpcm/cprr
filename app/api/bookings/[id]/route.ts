@@ -47,10 +47,11 @@ export async function PATCH(
     // Return the updated booking object
     return NextResponse.json(updatedBooking);
 
-  } catch (error: any) {
-    console.error('Error updating booking status:', error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error updating booking status:', err);
     return NextResponse.json(
-      { error: 'Failed to update booking status', details: error.message },
+      { error: 'Failed to update booking status', details: err.message },
       { status: 500 }
     );
   }
@@ -74,10 +75,11 @@ export async function GET(
       }
 
       return NextResponse.json(booking);
-    } catch (error: any) {
-        console.error('Error fetching single booking:', error);
+    } catch (error: unknown) {
+        const err = error as Error;
+        console.error('Error fetching single booking:', err);
         return NextResponse.json(
-            { error: 'Failed to fetch booking', details: error.message },
+            { error: 'Failed to fetch booking', details: err.message },
             { status: 500 }
         );
     }

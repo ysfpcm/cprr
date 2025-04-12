@@ -82,7 +82,7 @@ async function getSimplybookToken(companyLogin: string, apiKey: string): Promise
 }
 
 // Route to check SimplyBook API status and test phone validation
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Get API credentials from environment variables
     const simplybookApiKey = process.env.SIMPLYBOOK_API_KEY;

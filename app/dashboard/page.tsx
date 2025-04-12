@@ -169,7 +169,7 @@ export default function DashboardPage() {
         throw new Error(errorData.error || `Failed to update status: ${response.statusText}`);
       }
 
-      const updatedBooking = await response.json();
+      await response.json(); // We read the response but don't use it directly
 
       // Update local state only after successful API call
       const updatedBookings = bookings.map((b) =>
@@ -182,9 +182,10 @@ export default function DashboardPage() {
 
       return true; // Indicate success
 
-    } catch (err: any) {
-      console.error(`Error updating booking ${bookingId} to ${status}:`, err);
-      setError(`Failed to update booking: ${err.message}`);
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error(`Error updating booking ${bookingId} to ${status}:`, error);
+      setError(`Failed to update booking: ${error.message}`);
       return false; // Indicate failure
     }
   };

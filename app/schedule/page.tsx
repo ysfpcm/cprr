@@ -16,7 +16,7 @@ export default function SchedulePage() {
   const [step, setStep] = useState(1) // Step 1: Form, Step 2: Review, Step 3: Processing
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
-  const [isLoadingSlots, setIsLoadingSlots] = useState<boolean>(false); // Add loading state for time slots
+  const [isLoadingSlots,] = useState<boolean>(false); // Add loading state for time slots
   const [isShaking, setIsShaking] = useState(false); // Add state for shaking
   
   const [formData, setFormData] = useState({
