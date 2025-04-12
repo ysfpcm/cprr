@@ -14,6 +14,30 @@ const ADMIN_EMAILS = ["marlx0879@gmail.com", "info@anytimecpr.com"]
 // Key: email, Value: { token: string, expires: Date }
 const resetTokenStore = new Map()
 
+// Helper function to verify token directly within this route handler
+function verifyToken(email: string, token: string) {
+  if (!resetTokenStore.has(email)) {
+    return { valid: false, reason: "no_token" };
+  }
+  
+  const storedData = resetTokenStore.get(email);
+  const now = new Date();
+  
+  // Check if token has expired
+  if (now > storedData.expires) {
+    // Clean up expired token
+    resetTokenStore.delete(email);
+    return { valid: false, reason: "expired" };
+  }
+  
+  // Verify token
+  if (storedData.token !== token) {
+    return { valid: false, reason: "invalid" };
+  }
+  
+  return { valid: true };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
@@ -104,33 +128,22 @@ export async function PUT(request: NextRequest) {
   try {
     const { email, token } = await request.json()
 
-    // Check if the email has a stored token
-    if (!resetTokenStore.has(email)) {
+    const verification = verifyToken(email, token);
+    
+    if (!verification.valid) {
+      let errorMessage = "Invalid reset token";
+      const errorStatus = 400;
+      
+      if (verification.reason === "no_token") {
+        errorMessage = "No password reset request found for this email";
+      } else if (verification.reason === "expired") {
+        errorMessage = "Password reset link has expired. Please request a new one.";
+      }
+      
       return NextResponse.json(
-        { error: "No password reset request found for this email" },
-        { status: 400 }
-      )
-    }
-
-    const storedData = resetTokenStore.get(email)
-    const now = new Date()
-
-    // Check if token has expired
-    if (now > storedData.expires) {
-      // Clean up expired token
-      resetTokenStore.delete(email)
-      return NextResponse.json(
-        { error: "Password reset link has expired. Please request a new one." },
-        { status: 400 }
-      )
-    }
-
-    // Verify token
-    if (storedData.token !== token) {
-      return NextResponse.json(
-        { error: "Invalid reset token" },
-        { status: 400 }
-      )
+        { error: errorMessage },
+        { status: errorStatus }
+      );
     }
 
     // In a real app, you'd verify the old password and update with new password in the database
@@ -151,7 +164,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Export the resetTokenStore for verification in other routes
-export { resetTokenStore } 
+} 

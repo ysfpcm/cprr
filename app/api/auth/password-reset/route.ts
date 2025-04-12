@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { resetTokenStore } from "../forgot-password/route"
+// Create a shared token store module instead of importing from route
+// import { resetTokenStore } from "../forgot-password/route"
+
+// Since routes shouldn't export variables, we'll create an in-memory token store here
+// In a real app, you would use a proper database
+// Note: This is not ideal for serverless environments where each instance would have its own memory
+const resetTokenStore = new Map();
 
 // This is a reference to the mock user database from [...nextauth]/route.ts
 // In a real app, you would use a proper database access method

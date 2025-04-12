@@ -4,6 +4,7 @@ import { format, parseISO, parse } from 'date-fns';
 
 // Declare global type for storing bookings
 declare global {
+  // eslint-disable-next-line no-var
   var bookings: Booking[];
 }
 
@@ -178,7 +179,8 @@ function formatSimplybookDate(dateString: string): string | null {
             try {
                 parsedDate = parse(dateString, 'MMMM d, yyyy', new Date());
                 console.log(`Successfully parsed with 'MMMM d, yyyy' format: ${parsedDate.toISOString()}`);
-            } catch (error) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (_) {
                 console.warn(`Could not parse date "${dateString}" with format 'MMMM d, yyyy', trying direct parse...`);
                 // Fallback to direct Date parsing (less reliable)
                 parsedDate = new Date(dateString);
