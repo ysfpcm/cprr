@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, Lock } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -222,5 +222,25 @@ export default function ResetPasswordPage() {
         </div>
       </section>
     </div>
+  )
+}
+
+// Loading fallback component
+function LoadingResetPassword() {
+  return (
+    <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Loading...</h2>
+        <p className="text-gray-600">Please wait while we prepare the password reset page</p>
+      </div>
+    </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingResetPassword />}>
+      <ResetPasswordContent />
+    </Suspense>
   )
 } 

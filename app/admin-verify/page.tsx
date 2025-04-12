@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { ArrowLeft, Lock } from "lucide-react"
 import Link from "next/link"
 
-export default function AdminVerifyPage() {
+function AdminVerifyContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [otp, setOtp] = useState("")
@@ -215,5 +215,25 @@ export default function AdminVerifyPage() {
         </div>
       </section>
     </div>
+  )
+}
+
+// Loading fallback component
+function LoadingVerification() {
+  return (
+    <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Loading...</h2>
+        <p className="text-gray-600">Please wait while we prepare the verification page</p>
+      </div>
+    </div>
+  )
+}
+
+export default function AdminVerifyPage() {
+  return (
+    <Suspense fallback={<LoadingVerification />}>
+      <AdminVerifyContent />
+    </Suspense>
   )
 } 
