@@ -9,26 +9,38 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Helper function to get the base URL, ensuring it works in production
 function getBaseUrl(request: Request): string {
   // Try to get from environment variable first (most reliable option)
+  let baseUrl = '';
+  
   if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+    baseUrl = process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+  } else if (process.env.VERCEL_URL) {
+    baseUrl = `https://${process.env.VERCEL_URL}`;
+  } else {
+    // Fallback to request origin
+    try {
+      const url = new URL(request.url);
+      baseUrl = url.origin;
+    } catch (error) {
+      console.warn('Failed to parse URL from request, using default:', error);
+      // Last resort fallback - this should be avoided in favor of NEXT_PUBLIC_BASE_URL
+      baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'www.anytimecprhealthservices.com' 
+        : 'http://localhost:3000';
+    }
   }
   
-  // For Vercel deployments
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+  // Ensure the URL has a protocol
+  if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    // Add https:// for all except localhost which should use http://
+    if (baseUrl.includes('localhost')) {
+      baseUrl = `http://${baseUrl}`;
+    } else {
+      baseUrl = `https://${baseUrl}`;
+    }
   }
   
-  // Fallback to request origin
-  try {
-    const url = new URL(request.url);
-    return url.origin;
-  } catch (error) {
-    console.warn('Failed to parse URL from request, using default:', error);
-    // Last resort fallback - this should be avoided in favor of NEXT_PUBLIC_BASE_URL
-    return process.env.NODE_ENV === 'production' 
-      ? 'https://www.anytimecprhealthservices.com' 
-      : 'http://localhost:3000';
-  }
+  console.log('Formatted base URL:', baseUrl);
+  return baseUrl;
 }
 
 // Helper to process checkout.session.completed event
@@ -59,12 +71,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
     
     // Send confirmation email - ensure we use a full URL
     const baseUrl = getBaseUrl(request);
-    
-    // Validate the baseUrl has a protocol
-    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-      console.error(`Invalid base URL: ${baseUrl}. URLs must begin with http or https.`);
-      return false;
-    }
     
     const emailUrl = `${baseUrl}/api/email`
     console.log('Sending email request to:', emailUrl)
