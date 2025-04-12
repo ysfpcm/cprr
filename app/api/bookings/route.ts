@@ -346,6 +346,21 @@ async function checkTimeSlotAvailability(
 ): Promise<boolean> {
     console.log(`Checking availability for event ID ${eventId} on ${date} at ${time}`);
     try {
+        // Ensure eventId is a number
+        const numericEventId = Number(eventId);
+        if (isNaN(numericEventId)) {
+            console.error(`Invalid event ID: ${eventId}`);
+            return false;
+        }
+
+        // Make sure date is in the correct format (YYYY-MM-DD)
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            console.error(`Invalid date format: ${date}, expected YYYY-MM-DD`);
+            return false;
+        }
+        
+        console.log(`Making API call to SimplyBook.me with eventId=${numericEventId}, date=${date}`);
+        
         const response = await fetch('https://user-api.simplybook.me', {
             method: 'POST',
             headers: {
@@ -355,8 +370,12 @@ async function checkTimeSlotAvailability(
             },
             body: JSON.stringify({
                 jsonrpc: '2.0',
-                method: 'getStartTimeList', // CORRECTED METHOD NAME
-                params: [eventId, null, date], // unitId is null here, might need adjustment if unit is known
+                method: 'getStartTimeList',
+                params: {
+                    event_id: numericEventId,
+                    unit_id: null,
+                    date: date
+                },
                 id: `check_${eventId}_${date}`
             })
         });
@@ -367,6 +386,8 @@ async function checkTimeSlotAvailability(
         }
 
         const result = await response.json();
+        console.log('Raw SimplyBook.me getStartTimeList response:', result);
+        
         if (result.error) {
             console.error("SimplyBook.me getStartTimeList Error:", result.error);
             return false; // Assume unavailable on error
@@ -480,7 +501,11 @@ export async function POST(request: Request) {
                 body: JSON.stringify({
                   jsonrpc: '2.0',
                   method: 'getStartTimeList',
-                  params: [eventId, null, nextDateFormatted],
+                  params: {
+                    event_id: eventId,
+                    unit_id: null,
+                    date: nextDateFormatted
+                  },
                   id: 'timeslots'
                 })
               });

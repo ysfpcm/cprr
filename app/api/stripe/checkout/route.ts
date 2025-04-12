@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 function getBaseUrl(request: Request): string {
   // Try to get from environment variable first (most reliable option)
   if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
+    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
   }
   
   // For Vercel deployments
@@ -26,7 +26,7 @@ function getBaseUrl(request: Request): string {
     console.warn('Failed to parse URL from request, using default:', error);
     // Last resort fallback - this should be avoided in favor of NEXT_PUBLIC_BASE_URL
     return process.env.NODE_ENV === 'production' 
-      ? 'https://www.anytimecprhealthservices.com/' 
+      ? 'https://www.anytimecprhealthservices.com' 
       : 'http://localhost:3000';
   }
 }
@@ -45,6 +45,11 @@ export async function POST(request: Request) {
     // Ensure we have a valid base URL for redirects
     const baseUrl = getBaseUrl(request);
     console.log('Using base URL for redirects:', baseUrl);
+
+    // Validate the baseUrl has a protocol
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      throw new Error(`Invalid base URL: ${baseUrl}. URLs must begin with http or https.`);
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

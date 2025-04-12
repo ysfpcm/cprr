@@ -150,7 +150,11 @@ export async function GET() {
         body: JSON.stringify({
           jsonrpc: '2.0',
           method: 'getStartTimeList',
-          params: [testEventId, null, testDate], // eventId, unitId, date
+          params: {
+            event_id: 1, // Just testing with the first event
+            unit_id: null,
+            date: tomorrow
+          },
           id: 'timeslots'
         })
       });

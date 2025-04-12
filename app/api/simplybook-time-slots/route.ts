@@ -97,12 +97,17 @@ export async function GET(request: Request) {
       body: JSON.stringify({
         jsonrpc: '2.0',
         method: 'getStartTimeList',
-        params: [parseInt(eventId, 10), null, dateParam], // eventId, unitId, date
+        params: {
+          event_id: parseInt(eventId, 10),
+          unit_id: null,
+          date: dateParam
+        },
         id: 'timeslots'
       })
     });
     
     const timeSlotsResult = await timeSlotsResponse.json();
+    console.log('Raw SimplyBook.me getStartTimeList response:', timeSlotsResult);
     const timeSlots = timeSlotsResult.result || [];
     
     // Get a calendar with available dates
