@@ -56,16 +56,16 @@ export default function AboutPage() {
               </p>
             </motion.div>
             <motion.div
-              className="relative h-[400px] overflow-hidden rounded-lg"
+              className="relative h-[600px] w-full overflow-hidden rounded-xl border-4 border-black"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
               <Image
-                src="/placeholder.svg?height=400&width=600"
+                src="/dwnpic.jpg"
                 alt="CPR training session"
                 fill
-                className="object-cover"
+                className="object-contain"
               />
             </motion.div>
           </div>

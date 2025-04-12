@@ -113,14 +113,14 @@ export default function ContactPage() {
                     <Phone className="h-5 w-5 text-red-600 mt-0.5" />
                     <div>
                       <h4 className="font-medium">Phone</h4>
-                      <p className="text-sm text-gray-500">(555) 123-4567</p>
+                      <p className="text-sm text-gray-500">(407) 757-7511</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">
                     <Mail className="h-5 w-5 text-red-600 mt-0.5" />
                     <div>
                       <h4 className="font-medium">Email</h4>
-                      <p className="text-sm text-gray-500">info@anytimecpr.com</p>
+                      <p className="text-sm text-gray-500">dawnmcclain@hotmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">

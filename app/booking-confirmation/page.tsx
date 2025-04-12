@@ -71,10 +71,10 @@ function BookingConfirmation() {
           bookingData.email = email;
         }
         
-        // Save the booking to the dashboard
+        // Send booking data to SimplyBook.me via our API
         try {
-          console.log("Saving booking data to dashboard");
-          const bookingResponse = await fetch("/api/bookings/save", {
+          console.log("Sending booking data to SimplyBook.me via API");
+          const bookingApiResponse = await fetch("/api/bookings", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -85,22 +85,25 @@ function BookingConfirmation() {
               phone: bookingData.phone || "",
               service: bookingData.service || "CPR Training",
               participants: parseInt(bookingData.participants || "1", 10),
-              date: bookingData.date || new Date().toISOString(),
+              date: bookingData.date,
               time: bookingData.time || "12:00 PM",
+              unitId: bookingData.unitId,
               status: "upcoming",
-              notes: `Booking confirmed via payment page. Session ID: ${sessionId}`,
+              notes: `Booking confirmed via payment page.`,
               sessionId: sessionId
             }),
           });
           
-          if (bookingResponse.ok) {
-            console.log("Booking saved successfully to dashboard");
+          if (bookingApiResponse.ok) {
+            const result = await bookingApiResponse.json();
+            console.log("SimplyBook.me integration result:", result);
           } else {
-            console.error("Failed to save booking to dashboard:", await bookingResponse.text());
+            console.error("Failed to send booking to SimplyBook.me:", await bookingApiResponse.text());
+            // Continue with email sending even if SimplyBook.me integration fails
           }
         } catch (bookingError) {
-          console.error("Error saving booking to dashboard:", bookingError);
-          // Continue with email sending even if booking save fails
+          console.error("Error sending booking to SimplyBook.me:", bookingError);
+          // Continue with email sending even if SimplyBook.me integration fails
         }
         
         // Construct a properly formatted request with required fields
@@ -246,12 +249,12 @@ function BookingConfirmation() {
                   <p className="mt-2 text-sm text-gray-500">
                     If you need to reschedule or cancel your booking, please contact us at least 24 hours in advance.
                     You can email us at{" "}
-                    <a href="mailto:info@anytimecpr.com" className="text-green-600 hover:text-green-800">
-                      info@anytimecpr.com
+                    <a href="mailto:dawnmcclain@hotmail.com" className="text-green-600 hover:text-green-800">
+                    dawnmcclain@hotmail.com
                     </a>{" "}
-                    or call us at{" "}
-                    <a href="tel:5551234567" className="text-green-600 hover:text-green-800">
-                      (555) 123-4567
+                    or call at{" "}
+                    <a href="tel:+14077577511" className="text-green-600 hover:text-green-800">
+                      (407) 757-7511
                     </a>
                     .
                   </p>

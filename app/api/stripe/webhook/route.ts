@@ -63,12 +63,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
     console.log('Sending email request to:', emailUrl)
     
     try {
-      // Save booking data for the dashboard
-      const saveBookingUrl = `${baseUrl}/api/bookings/save`
-      console.log('Saving booking to the dashboard:', saveBookingUrl)
+      // Save booking data internally and trigger Simplybook.me integration
+      const bookingApiUrl = `${baseUrl}/api/bookings`
+      console.log('Calling booking API endpoint:', bookingApiUrl)
       
       try {
-        const bookingResponse = await fetch(saveBookingUrl, {
+        const bookingResponse = await fetch(bookingApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -76,13 +76,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
           body: JSON.stringify({
             clientName: customerName || 'Valued Customer',
             email: customerEmail,
-            phone: '', // We don't have phone from Stripe, would need to be collected during booking
+            phone: session.customer_details?.phone || '', // Try to get phone from Stripe customer details
             service,
             participants: Number(participants) || 1,
-            date: new Date().toISOString(), // Convert the date string to proper ISO format
+            date: date, // Use original date from Stripe metadata instead of converting to ISO
             time,
             status: 'upcoming',
-            notes: `Booking from Stripe checkout, session ID: ${session.id}`,
+            notes: `Booking from Stripe checkout.`,
             sessionId: session.id
           }),
         })

@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [newTime, setNewTime] = useState<string>("")
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is authorized to view this page
@@ -152,45 +153,53 @@ export default function DashboardPage() {
     setNewTime("")
   }
 
-  const handleCancel = (booking: Booking) => {
-    if (window.confirm(`Are you sure you want to cancel the booking for ${booking.clientName}?`)) {
-      const updatedBookings = bookings.map((b) => {
-        if (b.id === booking.id) {
-          return { ...b, status: "canceled" as BookingStatus }
-        }
-        return b
-      })
+  const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
+    setError(null); // Clear previous errors
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
 
-      setBookings(updatedBookings)
-      setFilteredBookings(updatedBookings.filter(b => {
-        const termMatch = !searchTerm ||
-            b.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.service.toLowerCase().includes(searchTerm.toLowerCase());
-        const statusMatch = statusFilter === 'all' || b.status === statusFilter;
-        return termMatch && statusMatch;
-      }))
-    }
-  }
-
-  const handleComplete = (booking: Booking) => {
-    const updatedBookings = bookings.map((b) => {
-      if (b.id === booking.id) {
-        return { ...b, status: "completed" as BookingStatus }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to update status: ${response.statusText}`);
       }
-      return b
-    })
 
-    setBookings(updatedBookings)
-    setFilteredBookings(updatedBookings.filter(b => {
-        const termMatch = !searchTerm ||
-            b.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.service.toLowerCase().includes(searchTerm.toLowerCase());
-        const statusMatch = statusFilter === 'all' || b.status === statusFilter;
-        return termMatch && statusMatch;
-    }))
-  }
+      const updatedBooking = await response.json();
+
+      // Update local state only after successful API call
+      const updatedBookings = bookings.map((b) =>
+        b.id === bookingId ? { ...b, status } : b
+      );
+      setBookings(updatedBookings);
+
+      // Re-apply filters to the updated list
+      filterBookings(searchTerm, statusFilter); // Use the existing filter function
+
+      return true; // Indicate success
+
+    } catch (err: any) {
+      console.error(`Error updating booking ${bookingId} to ${status}:`, err);
+      setError(`Failed to update booking: ${err.message}`);
+      return false; // Indicate failure
+    }
+  };
+
+  const handleCancel = async (booking: Booking) => {
+    if (window.confirm(`Are you sure you want to cancel the booking for ${booking.clientName}?`)) {
+      await updateBookingStatus(booking.id, "canceled");
+      // The state update is now handled within updateBookingStatus after API success
+    }
+  };
+
+  const handleComplete = async (booking: Booking) => {
+     await updateBookingStatus(booking.id, "completed");
+     // The state update is now handled within updateBookingStatus after API success
+  };
 
   // Helper function for status badge styling
   const getStatusBadgeClass = (status: BookingStatus): string => {
@@ -512,6 +521,17 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add error display element */}
+       {error && (
+        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50" role="alert">
+          <strong className="font-bold">Error:</strong>
+          <span className="block sm:inline"> {error}</span>
+          <button onClick={() => setError(null)} className="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>

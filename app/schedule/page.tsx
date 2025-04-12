@@ -4,16 +4,20 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Calendar, Check, CreditCard } from "lucide-react"
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
+import { Check, CreditCard, Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 
 export default function SchedulePage() {
   // --- State ---
-  const [date, setDate] = useState<Date | null>(null)
+  const [date, setDate] = useState<Date | undefined>(undefined)
   const [showCalendar, setShowCalendar] = useState(false)
   const [step, setStep] = useState(1) // Step 1: Form, Step 2: Review, Step 3: Processing
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentError, setPaymentError] = useState("")
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [isLoadingSlots, setIsLoadingSlots] = useState<boolean>(false); // Add loading state for time slots
+  const [isShaking, setIsShaking] = useState(false); // Add state for shaking
   
   const [formData, setFormData] = useState({
     name: "",
@@ -25,49 +29,14 @@ export default function SchedulePage() {
   })
 
   const [errors, setErrors] = useState<{
-    date?: string
-    service?: string
-    time?: string
+    name?: string;
+    email?: string;
+    phone?: string;
+    participants?: string;
+    date?: string;
+    service?: string;
+    time?: string;
   }>({})
-
-  // --- For mapping service or price display on the front-end ---
-  const getServicePrice = (serviceId: string) => {
-    switch (serviceId) {
-      case "cpr-first-aid":
-        return "$110"
-      case "first-aid":
-        return "$95"
-      case "bls":
-        return "$95"
-      case "pediatric":
-        return "$85"
-      case "babysitter":
-        return "$65"
-      case "test":
-        return "$0.50"
-      default:
-        return "$95"
-    }
-  }
-
-  const getServiceName = (serviceId: string) => {
-    switch (serviceId) {
-      case "cpr-first-aid":
-        return "CPR & First Aid Certification (AHA Guidelines)"
-      case "first-aid":
-        return "First Aid Certification (AHA Guidelines)"
-      case "bls":
-        return "BLS for Healthcare Providers"
-      case "pediatric":
-        return "Pediatric Training"
-      case "babysitter":
-        return "Babysitter Course"
-      case "test":
-        return "Test Payment (DELETE LATER)"
-      default:
-        return "Training"
-    }
-  }
 
   const availableTimeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"]
 
@@ -131,45 +100,99 @@ export default function SchedulePage() {
   }, [])
 
   // --- Form Handlers ---
+  
+  // Helper to format phone number input as (XXX) XXX-XXXX
+  const formatPhoneNumberInput = (value: string): string => {
+    if (!value) return value;
+
+    // Remove all non-digit characters
+    const phoneNumber = value.replace(/[^\d]/g, '');
+
+    // Get length of digits
+    const phoneNumberLength = phoneNumber.length;
+
+    // Return the formatted number
+    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    }
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    // Limit to 10 digits for standard US/CA format
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    if (name === "phone") {
+      const formattedPhoneNumber = formatPhoneNumberInput(value);
+      setFormData((prev) => ({ ...prev, [name]: formattedPhoneNumber }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
-  const handleDateSelect = (selectedDate: Date) => {
-    setDate(selectedDate)
-    setShowCalendar(false)
-    setErrors((prev) => ({ ...prev, date: undefined }))
-  }
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+        setDate(selectedDate);
+        setErrors((prev) => ({ ...prev, date: undefined }));
+        setShowCalendar(false); // Hide calendar on selection
+    } else {
+        setDate(undefined);
+    }
+  };
 
   const handleSubmitForm = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    // Reset shake state on new submission attempt
+    setIsShaking(false);
 
     // Validate form
     const newErrors: {
-      date?: string
-      service?: string
-      time?: string
-    } = {}
+      name?: string; // Added validation for required fields
+      email?: string;
+      phone?: string;
+      participants?: string;
+      date?: string;
+      service?: string;
+      time?: string;
+    } = {};
+
+    // Check all required fields
+    if (!formData.name) newErrors.name = "Please enter your full name";
+    if (!formData.email) newErrors.email = "Please enter your email address";
+    // Basic email format check (optional but good practice)
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Please enter a valid email address";
+    if (!formData.phone) newErrors.phone = "Please enter your phone number";
+    if (!formData.participants || parseInt(formData.participants) <= 0) newErrors.participants = "Please enter a valid number of participants";
+
 
     if (!date) {
-      newErrors.date = "Please select a date"
+      newErrors.date = "Please select a date";
     }
     if (!formData.service) {
-      newErrors.service = "Please select a service"
+      newErrors.service = "Please select a service";
     }
     if (!formData.time) {
-      newErrors.time = "Please select a time"
+      newErrors.time = "Please select a time";
     }
+
+    setErrors(newErrors); // Update errors state regardless
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
+      // Trigger shake animation
+      // Use requestAnimationFrame to ensure state update is processed before animation
+      requestAnimationFrame(() => {
+          setIsShaking(true);
+      });
+      // Reset shake after animation duration (e.g., 300ms)
+      setTimeout(() => setIsShaking(false), 300);
+      return;
     }
 
-    // Move to Review Step
-    setStep(2)
-  }
+    // If validation passes, clear errors and move to Review Step
+    // setErrors({}); // Errors are already updated above
+    setStep(2);
+  };
 
   const handleSubmitBooking = async () => {
     // Your validation code...
@@ -219,10 +242,12 @@ export default function SchedulePage() {
         customerEmail: formData.email,
         name: formData.name,
         customerName: formData.name,
-        service: getServiceName(formData.service),
+        service: services.find(s => s.id === formData.service)?.name || "",
         date: date ? format(date, 'MMMM d, yyyy') : '',
         time: formData.time,
         participants: formData.participants,
+        phone: formData.phone,
+        unitId: 3, // Hardcode unitId to 3 (Dr. Dawn Mcclain)
       }
       
       // Save to localStorage for retrieval after payment with error handling
@@ -242,12 +267,14 @@ export default function SchedulePage() {
         },
         body: JSON.stringify({
           amount,
-          service: getServiceName(formData.service),
+          service: services.find(s => s.id === formData.service)?.name || "",
           date: date ? format(date, 'MMMM d, yyyy') : '',
           time: formData.time,
           participants: formData.participants,
           customerEmail: formData.email,
           customerName: formData.name,
+          phone: formData.phone,
+          unitId: 3, // Hardcode unitId to 3 (Dr. Dawn Mcclain)
         }),
       })
 
@@ -301,20 +328,20 @@ export default function SchedulePage() {
       <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           {step === 1 && (
-            <div className="grid gap-6 lg:grid-cols-2 items-start">
+            <div className="grid gap-6 lg:grid-cols-2">
               {/* Service List */}
-              <motion.div
-                className="space-y-8"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <div>
+              <div className="flex flex-col">
+                <div className="mb-6">
                   <h2 className="text-3xl font-bold tracking-tighter">Book Your Session</h2>
                   <p className="text-gray-500 mt-2">Select your preferred date, time, and training service.</p>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <motion.div
+                  className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <h3 className="text-xl font-bold mb-2">Available Services</h3>
                   <p className="text-sm text-gray-500 mb-4">Choose the training you need</p>
                   <div className="space-y-4">
@@ -343,158 +370,189 @@ export default function SchedulePage() {
                   <p className="text-sm text-gray-500 mt-6">
                     Group discounts available for 5+ participants. Contact us for corporate rates.
                   </p>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
 
               {/* Form */}
-              <motion.form
-                onSubmit={handleSubmitForm}
-                className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 shadow-sm mt-24"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h3 className="text-xl font-bold">Enter Your Details</h3>
-                <p className="text-sm text-gray-500 mb-4">Please provide your contact and booking information.</p>
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Full Name
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="John Doe"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
+              <div className="flex flex-col">
+                <div className="mb-6">
+                  <h2 className="text-3xl font-bold tracking-tighter">Enter Your Details</h2>
+                  <p className="text-gray-500 mt-2">Please provide your contact and booking information.</p>
                 </div>
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="john@example.com"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="text-sm font-medium">
-                    Phone Number
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="(555) 123-4567"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="participants" className="text-sm font-medium">
-                    Number of Participants
-                  </label>
-                  <select
-                    id="participants"
-                    name="participants"
-                    value={formData.participants}
-                    onChange={handleChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                      <option key={num} value={num.toString()}>
-                        {num} {num === 1 ? "person" : "people"}
-                      </option>
-                    ))}
-                    <option value="more">More than 10 (Group)</option>
-                  </select>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2">
+                
+                <motion.form
+                  onSubmit={handleSubmitForm}
+                  className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-6"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {/* Name Input with Error */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Date</label>
-                    <div className="relative">
+                    <label htmlFor="name" className="text-sm font-medium">
+                      Full Name
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="John Doe"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      className={`w-full rounded-md border ${errors.name ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                    />
+                    {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+                  </div>
+
+                  {/* Email Input with Error */}
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium">
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="john@example.com"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`w-full rounded-md border ${errors.email ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                    />
+                    {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+                  </div>
+
+                  {/* Phone Input with Error */}
+                  <div className="space-y-2">
+                    <label htmlFor="phone" className="text-sm font-medium">
+                      Phone Number
+                    </label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="(123) 456-7890"
+                      required
+                      value={formData.phone}
+                      onChange={handleChange} // Uses formatPhoneNumberInput from handleChange
+                      className={`w-full rounded-md border ${errors.phone ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.phone ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                    />
+                    {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+                  </div>
+
+                  {/* Participants Input with Error */}
+                  <div className="space-y-2">
+                    <label htmlFor="participants" className="text-sm font-medium">
+                      Number of Participants
+                    </label>
+                    <input
+                      id="participants"
+                      name="participants"
+                      type="number"
+                      min="1"
+                      placeholder="1"
+                      value={formData.participants}
+                      onChange={handleChange}
+                      className={`w-full rounded-md border ${errors.participants ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.participants ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                    />
+                    {errors.participants && <p className="text-sm text-red-600">{errors.participants}</p>}
+                  </div>
+
+                  {/* Calendar and Time Slots */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Calendar with Error - Now wrapped for dropdown behavior */}
+                    <div className="space-y-2 relative"> {/* Added relative positioning */}                    <label className="text-sm font-medium block mb-1">Select Date</label>
+                      {/* Trigger Button */}
                       <button
                         type="button"
                         onClick={() => setShowCalendar(!showCalendar)}
-                        className="w-full flex justify-start items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className={`w-full flex justify-start items-center rounded-md border ${errors.date ? 'border-red-500' : 'border-gray-300'} bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${errors.date ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
                       >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" /> {/* Use the lucide icon */}
+                        {date ? format(date, "MMMM d, yyyy") : <span className="text-gray-500">Pick a date</span>}
                       </button>
+                      {/* Conditionally Rendered DayPicker */}
                       {showCalendar && (
-                        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-4">
-                          <div className="grid grid-cols-7 gap-2">
-                            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                              <div key={day} className="text-center text-xs font-medium text-gray-500">
-                                {day}
-                              </div>
-                            ))}
-                            {Array.from({ length: 35 }).map((_, i) => {
-                              const d = new Date()
-                              d.setDate(d.getDate() - d.getDay() + i)
-                              return (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  onClick={() => handleDateSelect(d)}
-                                  className={`text-center text-sm rounded-md p-2 hover:bg-gray-100 ${
-                                    date && d.toDateString() === date.toDateString() ? "bg-red-100 text-red-600" : ""
-                                  }`}
-                                >
-                                  {d.getDate()}
-                                </button>
-                              )
-                            })}
-                          </div>
+                        <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg border border-gray-300"> {/* Positioning wrapper */}
+                          <DayPicker 
+                            mode="single"
+                            selected={date}
+                            onSelect={handleDateSelect}
+                            className="p-0" // Keep internal styling separate
+                            classNames={{
+                              root: `p-3 bg-white`, // Simplified root for dropdown
+                              caption: `flex justify-center items-center py-2 mb-2 relative`,
+                              caption_label: `text-sm font-medium text-gray-900`,
+                              nav: `flex items-center space-x-1`,
+                              nav_button: `h-7 w-7 bg-transparent p-1 hover:bg-gray-100 rounded-md`,
+                              nav_button_previous: `absolute left-1`,
+                              nav_button_next: `absolute right-1`,
+                              table: `w-full border-collapse`,
+                              head_row: `flex font-medium text-gray-500 text-xs`,
+                              head_cell: `w-full pb-2`,
+                              row: `flex w-full mt-1.5`,
+                              cell: `flex-1 text-center text-sm p-0`,
+                              day: `h-8 w-8 p-0 rounded-md hover:bg-gray-100 transition-colors`,
+                              day_today: `font-bold text-red-600`,
+                              day_selected: `bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 rounded-md`,
+                              day_outside: `text-gray-400 opacity-50`,
+                              day_disabled: `text-gray-400 opacity-50 cursor-not-allowed`,
+                            }}
+                            disabled={(currentDate: Date) =>
+                               currentDate < new Date(new Date().setDate(new Date().getDate() - 1))
+                            }
+                          />
                         </div>
                       )}
+                      {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
                     </div>
-                    {errors.date && <p className="text-sm text-red-600">{errors.date}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="time" className="text-sm font-medium">
-                      Select Time
-                    </label>
-                    <select
-                      id="time"
-                      name="time"
-                      value={formData.time}
-                      onChange={handleChange}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="">Select time slot</option>
-                      {availableTimeSlots.map((time) => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.time && <p className="text-sm text-red-600">{errors.time}</p>}
-                  </div>
-                </div>
 
-                <button
-                  type="submit"
-                  className="w-full inline-flex h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-red-700 disabled:opacity-50"
-                >
-                  Continue to Review
-                </button>
+                    {/* Time Slots with Error */}
+                    <div className="space-y-2">
+                      <label htmlFor="time" className="text-sm font-medium">
+                        Select Time
+                      </label>
+                      <select
+                        id="time"
+                        name="time"
+                        value={formData.time}
+                        onChange={handleChange}
+                        disabled={!date || availableTimeSlots.length === 0} // Disable if no date or no slots
+                        className={`w-full rounded-md border ${errors.time ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.time ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                      >
+                        <option value="">Select a time slot</option>
+                        {isLoadingSlots ? (
+                            <option value="">Loading times...</option>
+                        ) : availableTimeSlots.length > 0 ? (
+                              availableTimeSlots.map((time) => (
+                                  <option key={time} value={time}>
+                                  {time}
+                                  </option>
+                              ))
+                        ) : (
+                            <option value="">No times available for selected date</option>
+                        )}
+                      </select>
+                      {errors.time && <p className="text-sm text-red-600">{errors.time}</p>}
+                    </div>
+                  </div>
 
-                <p className="text-sm text-gray-500 text-center">
-                  By booking, you agree to our cancellation policy. Cancellations must be made at least 24 hours in advance.
-                </p>
-              </motion.form>
+                  {/* Continue Button with Animation */}
+                  <motion.button
+                    type="submit"
+                    className="w-full inline-flex h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-red-700 disabled:opacity-50"
+                    animate={isShaking ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }} // Shake effect
+                    transition={isShaking ? { duration: 0.3 } : {}} // Animation duration
+                  >
+                    Continue to Review
+                  </motion.button>
+
+                  <p className="text-sm text-gray-500 text-center">
+                    By booking, you agree to our cancellation policy. Cancellations must be made at least 24 hours in advance.
+                  </p>
+                </motion.form>
+              </div>
             </div>
           )}
 
@@ -513,11 +571,11 @@ export default function SchedulePage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-500">Service</p>
-                        <p className="font-medium">{getServiceName(formData.service)}</p>
+                        <p className="font-medium">{services.find(s => s.id === formData.service)?.name || "Unknown Service"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Price</p>
-                        <p className="font-medium">{getServicePrice(formData.service)} per person</p>
+                        <p className="font-medium">{services.find(s => s.id === formData.service)?.price || "$95 per person"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Date</p>
@@ -534,10 +592,27 @@ export default function SchedulePage() {
                       <div>
                         <p className="text-sm text-gray-500">Total</p>
                         <p className="font-medium text-red-600">
-                          $
-                          {Number.parseInt(formData.participants) *
-                            Number.parseInt(getServicePrice(formData.service).replace("$", ""))}
+                          ${(() => {
+                            // Get the selected service details
+                            const selectedService = services.find(s => s.id === formData.service);
+                            // Extract the price string, default to '0' if not found
+                            const priceString = selectedService?.price || '0';
+                             // Remove '$' and any text after the number (like ' per person') using regex
+                            const priceValueString = priceString.replace(/[^\d.]/g, ''); // Keep only digits and decimal point
+                            // Parse the participants count, default to 1 if invalid or zero
+                            const participantsCount = Number.parseInt(formData.participants) || 1;
+                            // Parse the price per person, default to 0 if invalid
+                            const pricePerPerson = Number.parseFloat(priceValueString) || 0;
+                            // Calculate total
+                            const total = participantsCount * pricePerPerson;
+                            // Format to 2 decimal places
+                            return total.toFixed(2);
+                          })()}
                         </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Instructor</p>
+                        <p className="font-medium">Dr. Dawn Mcclain</p>
                       </div>
                     </div>
                   </div>
@@ -555,7 +630,7 @@ export default function SchedulePage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Phone</p>
-                        <p className="font-medium">{formData.phone || "Not provided"}</p>
+                        <p className="font-medium">{formData.phone}</p>
                       </div>
                     </div>
                   </div>

@@ -17,7 +17,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     const emailData = {
       to: data.email,
       from: process.env.SENDGRID_FROM_EMAIL!, // Use environment variable
-      subject: 'Booking Confirmation - Anytime CPR & Health Services',
+      subject: 'Booking Confirmation - Anytime CPR Health Services',
       templateId: process.env.SENDGRID_TEMPLATE_ID!, // Use environment variable
       dynamicTemplateData: {
         name: data.name,
