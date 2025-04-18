@@ -62,7 +62,7 @@ export default function AboutPage() {
               transition={{ duration: 0.5 }}
             >
               <Image
-                src="/dwnpic.jpg"
+                src="/dwnpic.JPG"
                 alt="CPR training session"
                 fill
                 className="object-contain"
