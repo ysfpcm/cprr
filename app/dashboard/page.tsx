@@ -64,16 +64,32 @@ export default function DashboardPage() {
         const data = await response.json();
         
         if (data.success && data.bookings) {
-          setBookings(data.bookings);
-          setFilteredBookings(data.bookings);
-          console.log(`Loaded ${data.bookings.length} bookings from API`);
+          // If there are no bookings from API but we have local ones, use local ones
+          if (data.bookings.length === 0) {
+            const localBookings = getInitialBookings();
+            if (localBookings.length > 0) {
+              setBookings(localBookings);
+              setFilteredBookings(localBookings);
+              console.log(`Using ${localBookings.length} bookings from local storage`);
+            } else {
+              setBookings([]);
+              setFilteredBookings([]);
+              console.log('No bookings found in API or local storage');
+            }
+          } else {
+            // Use bookings from API
+            setBookings(data.bookings);
+            setFilteredBookings(data.bookings);
+            console.log(`Loaded ${data.bookings.length} bookings from API`);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch bookings:', error);
-        // Fallback to initial bookings if API fails
-        const initialBookings = getInitialBookings();
-        setBookings(initialBookings);
-        setFilteredBookings(initialBookings);
+        // Fallback to local bookings if API fails
+        const localBookings = getInitialBookings();
+        setBookings(localBookings);
+        setFilteredBookings(localBookings);
+        console.log(`Fallback: Using ${localBookings.length} bookings from local storage due to API error`);
       }
     };
     
@@ -156,10 +172,26 @@ export default function DashboardPage() {
   const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
     setError(null); // Clear previous errors
     try {
+      // First find the booking to get its details
+      const booking = bookings.find(b => b.id === bookingId);
+      
+      if (!booking) {
+        throw new Error(`Booking with ID ${bookingId} not found in local state.`);
+      }
+
       const response = await fetch(`/api/bookings/${bookingId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          // Pass all booking information in headers so server can add it if needed
+          'x-client-name': booking.clientName,
+          'x-client-email': booking.email,
+          'x-client-phone': booking.phone,
+          'x-service-name': booking.service,
+          'x-participants': booking.participants.toString(),
+          'x-booking-date': booking.date,
+          'x-booking-time': booking.time,
+          'x-notes': booking.notes || '',
         },
         body: JSON.stringify({ status }),
       });

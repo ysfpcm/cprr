@@ -24,7 +24,7 @@ function BookingConfirmation() {
     const sendConfirmationEmail = async () => {
       setIsLoading(true);
       
-      // Only attempt to send email if we have a session ID
+      // Only attempt to process if we have a session ID
       if (!sessionId) {
         console.log("No session ID found in URL");
         setError("Missing session information. Please contact customer support if you need assistance.");
@@ -74,6 +74,28 @@ function BookingConfirmation() {
         // Send booking data to SimplyBook.me via our API
         try {
           console.log("Sending booking data to SimplyBook.me via API");
+          const mapServiceNameToSimplybookId = (serviceName: string): number => {
+            // Map service names to SimplyBookMe event IDs
+            const serviceMap: Record<string, number> = {
+              "BLS for Healthcare Providers": 2,
+              "CPR & First Aid Certification (AHA Guidelines)": 3,
+              "First Aid Certification (AHA Guidelines)": 4,
+              "Pediatric Training": 5,
+              "Babysitter Course": 6,
+              "Test Payment (DELETE LATER)": 7,
+            };
+
+            // Try to find a match
+            for (const [name, id] of Object.entries(serviceMap)) {
+              if (serviceName.includes(name) || name.includes(serviceName)) {
+                return id;
+              }
+            }
+            
+            // Default to 1 if no match found
+            return 1;
+          };
+
           const bookingApiResponse = await fetch("/api/bookings", {
             method: "POST",
             headers: {
@@ -90,66 +112,35 @@ function BookingConfirmation() {
               unitId: bookingData.unitId,
               status: "upcoming",
               notes: `Booking confirmed via payment page.`,
-              sessionId: sessionId
+              sessionId: sessionId,
+              // Use simplybookEventId from the bookingData if available, otherwise map from service name
+              simplybookEventId: bookingData.simplybookEventId || mapServiceNameToSimplybookId(bookingData.service || "CPR Training")
             }),
           });
           
           if (bookingApiResponse.ok) {
             const result = await bookingApiResponse.json();
             console.log("SimplyBook.me integration result:", result);
+            
+            // Set state to indicate booking was confirmed
+            setEmailSent(true);
+            
+            // Clear the pending booking data
+            try {
+              localStorage.removeItem("pendingBooking");
+            } catch (e) {
+              console.warn("Could not clear localStorage:", e);
+            }
           } else {
             console.error("Failed to send booking to SimplyBook.me:", await bookingApiResponse.text());
-            // Continue with email sending even if SimplyBook.me integration fails
+            setError("There was a problem confirming your booking. Please contact us for assistance.");
           }
         } catch (bookingError) {
           console.error("Error sending booking to SimplyBook.me:", bookingError);
-          // Continue with email sending even if SimplyBook.me integration fails
-        }
-        
-        // Construct a properly formatted request with required fields
-        const emailRequest = {
-          email: bookingData.email,
-          name: bookingData.name || "Valued Customer",
-          service: bookingData.service || "CPR Training",
-          date: bookingData.date || "As scheduled",
-          time: bookingData.time || "As scheduled",
-          participants: bookingData.participants || "1",
-          sessionId: sessionId // Include the session ID for reference
-        };
-        
-        console.log("Sending email request with data:", emailRequest);
-        
-        // Use a relative URL instead of a hardcoded one
-        const response = await fetch("/api/email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(emailRequest),
-        });
-        
-        if (response.ok) {
-          setEmailSent(true);
-          // Clear the pending booking data
-          try {
-            localStorage.removeItem("pendingBooking");
-          } catch (e) {
-            console.warn("Could not clear localStorage:", e);
-          }
-          console.log("Confirmation email sent successfully to:", emailRequest.email);
-        } else {
-          let errorText = "";
-          try {
-            const errorResponse = await response.json();
-            errorText = JSON.stringify(errorResponse);
-          } catch {
-            errorText = await response.text();
-          }
-          console.error("Failed to send confirmation email:", errorText);
-          setError("There was a problem sending your confirmation email. Please contact us for assistance.");
+          setError("An unexpected error occurred. Please contact us to confirm your booking.");
         }
       } catch (error) {
-        console.error("Error sending confirmation email:", error);
+        console.error("Error processing booking confirmation:", error);
         setError("An unexpected error occurred. Please contact us to confirm your booking.");
       } finally {
         setIsLoading(false);
@@ -197,12 +188,12 @@ function BookingConfirmation() {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold">Your Training is Scheduled</h2>
               {isLoading ? (
-                <p className="text-gray-500 mt-2">Loading confirmation details...</p>
+                <p className="text-gray-500 mt-2">Processing your booking...</p>
               ) : (
                 <p className="text-gray-500 mt-2">
                   {emailSent 
-                    ? "We sent a confirmation email with all the details. Please check your inbox."
-                    : "Your booking is confirmed. You should receive a confirmation email shortly."}
+                    ? "Your booking is confirmed. You'll receive a confirmation email from SimplyBookMe with all the details."
+                    : "Your booking is being processed. You should receive a confirmation email from SimplyBookMe shortly."}
                 </p>
               )}
               {error && (

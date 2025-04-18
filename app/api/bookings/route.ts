@@ -16,6 +16,12 @@ interface SimplybookEvent {
   [key: string]: unknown; // For other properties we don't need to explicitly define
 }
 
+interface SimplybookUnit {
+  name: string;
+  // Add other known properties if available
+  [key: string]: unknown; // For other properties we don't need to explicitly define
+}
+
 // Define interface for SimplyBook.me API response
 interface SimplybookResponse {
   result?: unknown;
@@ -324,15 +330,50 @@ async function getSimplybookEventId(serviceName: string, companyLogin: string, t
     
     // Fallback mapping if API call fails
     const serviceMap: Record<string, number> = {
-      "CPR Training": 1,
-      "First Aid Course": 2,
-      "AED Training": 3,
-      "Basic Life Support": 4,
-      "Test Payment (DELETE LATER)": 1,
+      "BLS for Healthcare Providers": 2,
+      "CPR & First Aid Certification (AHA Guidelines)": 3,
+      "First Aid Certification (AHA Guidelines)": 4,
+      "Pediatric Training": 5,
+      "Babysitter Course": 6,
+      "Test Payment (DELETE LATER)": 7,
     };
 
     const eventId = serviceMap[serviceName];
     return eventId || 1; // Return mapped ID or default (1)
+  }
+}
+
+// Helper function to get performers/units from SimplyBook.me
+async function getSimplybookUnitList(companyLogin: string, token: string): Promise<Record<string, SimplybookUnit>> {
+  console.log("Fetching performers/units from SimplyBook.me...");
+  try {
+    const unitListResponse = await fetch('https://user-api.simplybook.me', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Company-Login': companyLogin,
+        'X-Token': token
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'getUnitList',
+        params: [],
+        id: 'units'
+      })
+    });
+    
+    const unitListResult = await unitListResponse.json();
+    if (unitListResult.error) {
+      console.error("SimplyBook.me getUnitList Error:", unitListResult.error);
+      throw new Error(`Failed to fetch units from SimplyBook.me: ${unitListResult.error.message}`);
+    }
+    
+    const units: Record<string, SimplybookUnit> = unitListResult.result || {};
+    console.log(`Retrieved ${Object.keys(units).length} performers/units from SimplyBook.me`);
+    return units;
+  } catch (error) {
+    console.error("Error fetching SimplyBook.me units:", error);
+    return {}; // Return empty object in case of error
   }
 }
 
@@ -344,7 +385,7 @@ async function checkTimeSlotAvailability(
   companyLogin: string, 
   token: string
 ): Promise<boolean> {
-    console.log(`Checking availability for event ID ${eventId} on ${date} at ${time}`);
+    console.log(`Checking availability using getStartTimeMatrix for event ID ${eventId} on ${date} at ${time}`);
     try {
         // Ensure eventId is a number
         const numericEventId = Number(eventId);
@@ -370,35 +411,35 @@ async function checkTimeSlotAvailability(
             },
             body: JSON.stringify({
                 jsonrpc: '2.0',
-                method: 'getStartTimeList',
-                params: {
-                    event_id: numericEventId,
-                    unit_id: null,
-                    date: date
-                },
+                method: 'getStartTimeMatrix',
+                params: [date, date, numericEventId, null, 1],
                 id: `check_${eventId}_${date}`
             })
         });
         
         if (!response.ok) {
-            console.error(`SimplyBook.me getStartTimeList request failed with status ${response.status}`);
+            console.error(`SimplyBook.me getStartTimeMatrix request failed with status ${response.status}`);
             return false; // Assume unavailable on failure
         }
 
         const result = await response.json();
-        console.log('Raw SimplyBook.me getStartTimeList response:', result);
+        console.log('Raw SimplyBook.me getStartTimeMatrix response:', result);
         
         if (result.error) {
-            console.error("SimplyBook.me getStartTimeList Error:", result.error);
+            console.error("SimplyBook.me getStartTimeMatrix Error:", result.error);
+            // If method not found, log this specific error
+            if (result.error.code === -32601) {
+              console.error("METHOD NOT FOUND error received for getStartTimeMatrix. Check API documentation.");
+            }
             return false; // Assume unavailable on error
         }
 
-        const availableSlots: Record<string, number> = result.result || {};
-        // Simplybook returns time slots like "13:00:00" as keys
-        const isAvailable = time in availableSlots;
+        // Response format for getStartTimeMatrix is { "YYYY-MM-DD": ["HH:MM:SS", ...], ... }
+        const availableSlotsForDate: string[] = result.result?.[date] || [];
+        const isAvailable = availableSlotsForDate.includes(time);
         
         console.log(`Time slot ${time} on ${date} for event ${eventId} is available: ${isAvailable}`);
-        console.log("Available slots found:", availableSlots);
+        console.log("Available slots for date:", availableSlotsForDate);
         return isAvailable;
 
     } catch (error) {
@@ -438,8 +479,48 @@ export async function POST(request: Request) {
         const token = await getSimplybookToken(simplybookCompanyLogin, simplybookApiKey);
 
         // 4. Prepare data for SimplyBook.me
-        // Map the service name to SimplyBook.me event ID
-        const eventId = await getSimplybookEventId(bookingData.service, simplybookCompanyLogin, token);
+        // Use provided simplybookEventId if available, otherwise look it up
+        let eventId: number;
+        if (bookingData.simplybookEventId && typeof bookingData.simplybookEventId === 'number') {
+            // Use the provided ID directly
+            eventId = bookingData.simplybookEventId;
+            console.log(`Using provided SimplyBook.me event ID: ${eventId} for service "${bookingData.service}"`);
+        } else {
+            // Fall back to looking up by name
+            eventId = await getSimplybookEventId(bookingData.service, simplybookCompanyLogin, token);
+            console.log(`Looked up event ID for service "${bookingData.service}": ${eventId}`);
+        }
+        
+        // Fetch available performers/units
+        const performers = await getSimplybookUnitList(simplybookCompanyLogin, token);
+        console.log(`Retrieved ${Object.keys(performers).length} performers/units from SimplyBook.me`);
+        
+        // Get event details to see which performers can provide this service
+        const eventDetailsResponse = await fetch('https://user-api.simplybook.me', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Company-Login': simplybookCompanyLogin,
+            'X-Token': token
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'getEvent',
+            params: [eventId],
+            id: 'event_details'
+          })
+        });
+        
+        const eventDetails = await eventDetailsResponse.json();
+        console.log("Event details:", eventDetails.result);
+        
+        // Get available performers for this service from unit_map
+        let availablePerformers: number[] = [];
+        if (eventDetails.result && eventDetails.result.unit_map) {
+          availablePerformers = eventDetails.result.unit_map;
+          console.log(`Available performers for service "${bookingData.service}":`, availablePerformers);
+        }
+        
         // Get unitId from request, default to null if not provided or invalid
         const rawUnitId = bookingData.unitId;
         let unitId: number | null = null;
@@ -452,7 +533,13 @@ export async function POST(request: Request) {
                 console.warn(`Invalid unitId provided: \"${rawUnitId}\". Defaulting to null.`);
             }
         } else {
-            console.log("No unitId provided, defaulting to null.");
+            // If no unitId provided but we have available performers, use the first one
+            if (availablePerformers.length > 0) {
+                unitId = availablePerformers[0];
+                console.log(`No unitId provided, using first available performer: ${unitId}`);
+            } else {
+                console.log("No unitId provided and no available performers found, defaulting to null.");
+            }
         }
                 
         console.log(`Mapped service "${bookingData.service}" to SimplyBook.me event ID: ${eventId}`);
@@ -485,46 +572,52 @@ export async function POST(request: Request) {
             const suggestions = [];
             const baseDate = new Date(formattedDate);
             
-            for (let i = 1; i <= 10; i++) {
-              const nextDate = new Date(baseDate);
-              nextDate.setDate(baseDate.getDate() + i);
-              const nextDateFormatted = nextDate.toISOString().split('T')[0];
-              
-              // Check if this date has slots
-              const timeSlotsResponse = await fetch('https://user-api.simplybook.me', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-Company-Login': simplybookCompanyLogin,
-                  'X-Token': token
-                },
-                body: JSON.stringify({
-                  jsonrpc: '2.0',
-                  method: 'getStartTimeList',
-                  params: {
-                    event_id: eventId,
-                    unit_id: null,
-                    date: nextDateFormatted
-                  },
-                  id: 'timeslots'
-                })
-              });
-              
-              const slots = await timeSlotsResponse.json();
-              if (slots.result && slots.result.length > 0) {
-                suggestions.push({
-                  date: nextDateFormatted,
-                  slots: slots.result.slice(0, 3) // Just get first 3 slots
-                });
-                
-                // If we found 3 days with slots, that's enough
-                if (suggestions.length >= 3) break;
-              }
+            // Fetch slots for multiple days at once using getStartTimeMatrix
+            const endDate = new Date(baseDate);
+            endDate.setDate(baseDate.getDate() + 10);
+            const endDateFormatted = endDate.toISOString().split('T')[0];
+            
+            console.log(`Fetching alternative slots from ${formattedDate} to ${endDateFormatted} using getStartTimeMatrix`);
+            
+            const timeSlotsResponse = await fetch('https://user-api.simplybook.me', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Company-Login': simplybookCompanyLogin,
+                'X-Token': token
+              },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'getStartTimeMatrix', // Changed method
+                params: [formattedDate, endDateFormatted, eventId, unitId, 1], // Corrected order: [dateFrom, dateTo, eventId, unitId, count]
+                id: 'alternative_timeslots'
+              })
+            });
+            
+            const slotsResult = await timeSlotsResponse.json();
+            console.log('Alternative slots response:', slotsResult);
+            
+            if (slotsResult.error) {
+              console.error("Error fetching alternative time slots:", slotsResult.error);
+            } else if (slotsResult.result) {
+                // Iterate through the dates in the result matrix
+                for (const [slotDate, times] of Object.entries(slotsResult.result)) {
+                    // Skip the original date we checked
+                    if (slotDate === formattedDate) continue;
+                    
+                    if (Array.isArray(times) && times.length > 0) {
+                        suggestions.push({
+                            date: slotDate,
+                            slots: times.slice(0, 3) // Get first 3 available slots for that date
+                        });
+                        // Stop if we have enough suggestions
+                        if (suggestions.length >= 3) break;
+                    }
+                }
             }
             
             if (suggestions.length > 0) {
               console.log("Alternative time slots found:", suggestions);
-              // Store these suggestions to include in the response or email
               bookingData.suggestedAlternatives = suggestions;
             } else {
               console.log("No alternative time slots found in the next 10 days.");

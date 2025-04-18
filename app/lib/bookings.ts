@@ -1,4 +1,4 @@
-import { addDays } from "date-fns";
+// import { format, parseISO } from 'date-fns'; // Removed unused imports
 
 // Define the Booking interface
 export interface Booking {
@@ -19,20 +19,7 @@ export interface Booking {
 export type BookingStatus = Booking["status"];
 
 // Mock data for client bookings - This would eventually be replaced by API calls
-const mockBookings: Booking[] = [
-    {
-      id: "b1",
-      clientName: "Sarah Johnson",
-      email: "sarah@example.com",
-      phone: "(555) 123-4567",
-      service: "CPR Training",
-      participants: 2,
-      date: addDays(new Date(), 3).toISOString(),
-      time: "10:00 AM",
-      status: "upcoming",
-      notes: "First-time client, requested extra materials",
-    },
-  ]
+const mockBookings: Booking[] = []
 
 // Function to save a new booking to localStorage
 export const saveBooking = (bookingData: Omit<Booking, "id">): Booking => {

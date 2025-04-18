@@ -15,14 +15,14 @@ const users = [
     id: "2",
     name: "Admin User",
     email: "marlx0879@gmail.com",
-    password: "$2a$10$mQNWXJT2aRyLJJC9whYLke/dJ7uoUawY5/yQfanwolSVu9MPUcOT.",
+    password: "$2b$10$Kdj0yY5ONaXBh/oOA0uQf.1hFEZd7Zldj9rygO1Uv2zqzUawMDXc2",
     isAdmin: true,
   },
   {
     id: "3",
     name: "Admin User",
     email: "info@anytimecpr.com",
-    password: "$2a$10$mQNWXJT2aRyLJJC9whYLke/dJ7uoUawY5/yQfanwolSVu9MPUcOT.",
+    password: "$2b$10$Kdj0yY5ONaXBh/oOA0uQf.1hFEZd7Zldj9rygO1Uv2zqzUawMDXc2",
     isAdmin: true,
   },
 ]

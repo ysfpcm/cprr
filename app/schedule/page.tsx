@@ -46,36 +46,42 @@ export default function SchedulePage() {
       name: "BLS for Healthcare Providers",
       price: "$95 per person",
       description: "AHA-compliant Basic Life Support for healthcare professionals. Advanced CPR, airway, team skills.",
+      simplybookId: 2
     },
     {
       id: "cpr-first-aid",
       name: "CPR & First Aid Certification (AHA Guidelines)",
       price: "$110 per person",
       description: "Combined CPR (Adult/Child/Infant/AED) & First Aid following AHA guidelines. 2-year certification.",
+      simplybookId: 3
     },
     {
       id: "first-aid",
       name: "First Aid Certification (AHA Guidelines)",
       price: "$95 per person",
       description: "Manage injuries like bleeding, burns, fractures per AHA guidelines. Workplace safety focus.",
+      simplybookId: 4
     },
     {
       id: "pediatric",
       name: "Pediatric Training",
       price: "$85 per person",
       description: "Specialized training focusing on CPR and First Aid for infants and children.",
+      simplybookId: 5
     },
     {
       id: "babysitter",
       name: "Babysitter Course",
       price: "$65 per person",
       description: "Essential skills for childcare providers, including child safety, basic first aid, and CPR.",
+      simplybookId: 6
     },
     {
       id: "test",
       name: "Test Payment (DELETE LATER)",
       price: "$0.50 per person",
       description: "For testing payment integration only.",
+      simplybookId: 7
     },
   ]
 
@@ -237,17 +243,20 @@ export default function SchedulePage() {
       }
 
       // Save booking details to localStorage before redirecting
+      const selectedService = services.find(s => s.id === formData.service);
+
       const bookingData = {
         email: formData.email,
         customerEmail: formData.email,
         name: formData.name,
         customerName: formData.name,
-        service: services.find(s => s.id === formData.service)?.name || "",
+        service: selectedService?.name || "",
         date: date ? format(date, 'MMMM d, yyyy') : '',
         time: formData.time,
         participants: formData.participants,
         phone: formData.phone,
         unitId: 3, // Hardcode unitId to 3 (Dr. Dawn Mcclain)
+        simplybookEventId: selectedService?.simplybookId // Add the SimplyBookMe event ID
       }
       
       // Save to localStorage for retrieval after payment with error handling

@@ -31,38 +31,8 @@ export default function LoginPage() {
     setIsSubmitting(true)
     setError("")
 
-    // Check if this is an admin login attempt
-    if (ADMIN_EMAILS.includes(formData.email)) {
-      try {
-        // Send verification code to admin email
-        const response = await fetch("/api/auth/admin-verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: formData.email }),
-        })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          setError(data.error || "Failed to send verification code")
-          setIsSubmitting(false)
-          return
-        }
-
-        // Redirect to verification page
-        router.push(`/admin-verify?email=${encodeURIComponent(formData.email)}`)
-      } catch (err) {
-        console.error("Error:", err)
-        setError("An error occurred. Please try again.")
-        setIsSubmitting(false)
-      }
-      return
-    }
-
-    // Regular user login
     try {
+      // Direct login for all users, including admins
       const result = await signIn("credentials", {
         redirect: false,
         email: formData.email,
@@ -75,9 +45,16 @@ export default function LoginPage() {
         return
       }
 
+      // For admin emails, set the sessionStorage variables that dashboard expects
+      if (ADMIN_EMAILS.includes(formData.email)) {
+        sessionStorage.setItem("admin_verified", "true")
+        sessionStorage.setItem("admin_email", formData.email)
+      }
+
       // Redirect to dashboard or previous page
       router.push("/dashboard")
-    } catch {
+    } catch (err) {
+      console.error("Error:", err)
       setError("An error occurred. Please try again.")
       setIsSubmitting(false)
     }

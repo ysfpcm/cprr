@@ -43,6 +43,44 @@ function getBaseUrl(request: Request): string {
   return baseUrl;
 }
 
+// Add this helper function at the top of the file
+function getSimplybookEventIdForService(serviceName: string): number {
+  // Map service names to SimplyBookMe event IDs
+  const serviceMap: Record<string, number> = {
+    "BLS for Healthcare Providers": 2,
+    "CPR & First Aid Certification (AHA Guidelines)": 3,
+    "First Aid Certification (AHA Guidelines)": 4,
+    "Pediatric Training": 5,
+    "Babysitter Course": 6,
+    "Test Payment (DELETE LATER)": 7,
+  };
+
+  // Try to find a direct match first
+  if (serviceName in serviceMap) {
+    return serviceMap[serviceName];
+  }
+
+  // If no direct match, try case-insensitive match
+  const lowerServiceName = serviceName.toLowerCase();
+  for (const [name, id] of Object.entries(serviceMap)) {
+    if (name.toLowerCase() === lowerServiceName) {
+      return id;
+    }
+  }
+
+  // If no match found, check for partial matches
+  for (const [name, id] of Object.entries(serviceMap)) {
+    if (name.toLowerCase().includes(lowerServiceName) || 
+        lowerServiceName.includes(name.toLowerCase())) {
+      return id;
+    }
+  }
+
+  // Default to 1 if no match found
+  console.warn(`No SimplyBookMe event ID mapping found for "${serviceName}", defaulting to 1`);
+  return 1;
+}
+
 // Helper to process checkout.session.completed event
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, request: Request) {
   try {
@@ -96,7 +134,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
             time,
             status: 'upcoming',
             notes: `Booking from Stripe checkout.`,
-            sessionId: session.id
+            sessionId: session.id,
+            simplybookEventId: getSimplybookEventIdForService(service) // Add SimplyBookMe event ID
           }),
         })
         
@@ -106,51 +145,27 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
           console.error('Failed to save booking data for dashboard:', await bookingResponse.text())
         } else {
           console.log('Booking data saved successfully for dashboard')
+          console.log('Note: Email sending via SendGrid has been disabled - SimplyBookMe will handle confirmation emails')
         }
       } catch (bookingError) {
         console.error('Error saving booking data:', bookingError)
       }
       
-      const emailResponse = await fetch(emailUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Return detailed success response with booking information
+      return NextResponse.json({ 
+        received: true, 
+        message: 'Booking processed successfully', 
+        bookingInfo: {
           email: customerEmail,
-          name: customerName || 'Valued Customer',
           service,
           date,
           time,
-          participants,
-        }),
-      })
-      
-      // Log detailed response information
-      console.log('Email API response status:', emailResponse.status)
-      
-      if (!emailResponse.ok) {
-        let errorData: unknown = 'Unable to parse error response'
-        try {
-          errorData = await emailResponse.json()
-        } catch {
-          try {
-            errorData = await emailResponse.text()
-          } catch (textError) {
-            console.error('Failed to parse error response as text:', textError)
-          }
+          participants
         }
-        console.error('Failed to send confirmation email:', errorData)
-        return false
-      }
-      
-      const responseData = await emailResponse.json()
-      console.log('Email API response data:', responseData)
-      console.log('Confirmation email sent successfully to:', customerEmail)
-      return true
-    } catch (fetchError) {
-      console.error('Error fetching email API:', fetchError)
-      return false
+      })
+    } catch (error) {
+      console.error('Error processing checkout completion:', error)
+      return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
     }
   } catch (error) {
     console.error('Error processing checkout session:', error)

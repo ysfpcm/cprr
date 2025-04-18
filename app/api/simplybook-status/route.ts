@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 
+// Define interface for SimplyBook.me unit (performer)
+interface SimplybookUnit {
+  name: string;
+  // Add other known properties if available
+  [key: string]: unknown; // For other properties we don't need to explicitly define
+}
+
 // Helper function to format phone number for SimplyBook.me
 function formatPhoneNumber(phoneString: string): string {
   // Return a default phone number if input is empty or undefined
@@ -81,6 +88,40 @@ async function getSimplybookToken(companyLogin: string, apiKey: string): Promise
   }
 }
 
+// Helper function to get performers/units
+async function getSimplybookUnitList(companyLogin: string, token: string): Promise<Record<string, SimplybookUnit>> {
+  console.log("Fetching performers/units from SimplyBook.me...");
+  try {
+    const unitListResponse = await fetch('https://user-api.simplybook.me', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Company-Login': companyLogin,
+        'X-Token': token
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'getUnitList',
+        params: [],
+        id: 'units'
+      })
+    });
+    
+    const unitListResult = await unitListResponse.json();
+    if (unitListResult.error) {
+      console.error("SimplyBook.me getUnitList Error:", unitListResult.error);
+      throw new Error(`Failed to fetch units from SimplyBook.me: ${unitListResult.error.message}`);
+    }
+    
+    const units: Record<string, SimplybookUnit> = unitListResult.result || {};
+    console.log(`Retrieved ${Object.keys(units).length} performers/units from SimplyBook.me`);
+    return units;
+  } catch (error) {
+    console.error("Error fetching SimplyBook.me units:", error);
+    return {}; // Return empty object in case of error
+  }
+}
+
 // Route to check SimplyBook API status and test phone validation
 export async function GET() {
   try {
@@ -129,9 +170,12 @@ export async function GET() {
     
     const events = eventListResult.result || {};
     
+    // Get performers/units
+    const performers = await getSimplybookUnitList(simplybookCompanyLogin, token);
+    
     // Check available time slots for a specific event (just for testing)
     const testEventId = Object.keys(events)[0]; // Get first event ID if available
-    let timeSlots = {};
+    let timeSlotTestResult = {};
     
     if (testEventId) {
       // Get a future date (tomorrow)
@@ -139,7 +183,27 @@ export async function GET() {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const testDate = tomorrow.toISOString().split('T')[0]; // Format as YYYY-MM-DD
       
-      console.log(`Fetching time slots for event ID ${testEventId} on ${testDate}...`);
+      // Get event details to check unit_map
+      const eventDetailsResponse = await fetch('https://user-api.simplybook.me', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Company-Login': simplybookCompanyLogin,
+          'X-Token': token
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'getEvent',
+          params: [parseInt(testEventId, 10)],
+          id: 'event_details'
+        })
+      });
+      
+      const eventDetails = await eventDetailsResponse.json();
+      const unitMap = eventDetails.result?.unit_map || [];
+      const firstPerformer = unitMap.length > 0 ? unitMap[0] : null;
+      
+      console.log(`Fetching time slots for event ID ${testEventId} on ${testDate} using getStartTimeMatrix...`);
       const timeSlotsResponse = await fetch('https://user-api.simplybook.me', {
         method: 'POST',
         headers: {
@@ -149,22 +213,21 @@ export async function GET() {
         },
         body: JSON.stringify({
           jsonrpc: '2.0',
-          method: 'getStartTimeList',
-          params: {
-            event_id: 1, // Just testing with the first event
-            unit_id: null,
-            date: tomorrow
-          },
+          method: 'getStartTimeMatrix',
+          params: [testDate, testDate, parseInt(testEventId, 10), firstPerformer, 1],
           id: 'timeslots'
         })
       });
       
       const timeSlotsResult = await timeSlotsResponse.json();
-      console.log("SimplyBook.me time slots:", timeSlotsResult);
-      timeSlots = {
+      console.log("SimplyBook.me time slots (getStartTimeMatrix):", timeSlotsResult);
+      timeSlotTestResult = {
         eventId: testEventId,
         date: testDate,
-        availableSlots: timeSlotsResult.result || []
+        performerId: firstPerformer,
+        availableSlots: timeSlotsResult.result?.[testDate] || [],
+        eventDetails: eventDetails.result || {},
+        rawMatrixResponse: timeSlotsResult.result || {}
       };
     }
 
@@ -173,8 +236,9 @@ export async function GET() {
       token: token ? "Valid token received" : "Failed to get token",
       phoneFormatting: phoneExamples,
       events: events,
-      timeSlotTest: timeSlots,
-      message: "SimplyBook.me API is properly configured. Please use the actual event IDs shown in the response."
+      performers: performers,
+      timeSlotTest: timeSlotTestResult,
+      message: "SimplyBook.me API is properly configured. The response includes available events, performers, and a test time slot query using getStartTimeMatrix."
     });
   } catch (error) {
     console.error("Error in SimplyBook.me status check:", error);
