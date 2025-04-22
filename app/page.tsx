@@ -118,6 +118,26 @@ export default function Home() {
                 Comprehensive first aid training for workplace safety compliance and personal preparedness.
               </p>
             </motion.div>
+            <motion.div
+              className="flex flex-col items-center space-y-4 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div>
+                <Image
+                  src="/cprcorp.png"
+                  alt="Group CPR Training"
+                  width={400}
+                  height={200}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-xl font-bold">Group Training</h3>
+              <p className="text-gray-500">
+                Ideal for businesses, schools, or organizations needing to certify multiple people. We can come to you!
+              </p>
+            </motion.div>
           </div>
         </div>
       </section>
