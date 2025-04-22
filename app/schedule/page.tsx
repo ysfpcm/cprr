@@ -9,6 +9,16 @@ import 'react-day-picker/dist/style.css';
 import { Check, CreditCard, Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 
+// Updated service type definition
+type Service = {
+  id: string;
+  name: string;
+  price: string;
+  description: string;
+  simplybookId: number;
+  availableFrom?: string; // Optional property for services that have a future availability date
+}
+
 export default function SchedulePage() {
   // --- State ---
   const [date, setDate] = useState<Date | undefined>(undefined)
@@ -40,48 +50,57 @@ export default function SchedulePage() {
 
   const availableTimeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"]
 
-  const services = [
+  const services: Service[] = [
     {
       id: "bls",
-      name: "BLS for Healthcare Providers",
-      price: "$95 per person",
-      description: "AHA-compliant Basic Life Support for healthcare professionals. Advanced CPR, airway, team skills.",
+      name: "BLS for Healthcare Providers (American Heart Association Compliant)",
+      price: "$75 per person",
+      description: "Basic Life Support for healthcare professionals; high‑quality CPR, airway & team‑based skills.",
       simplybookId: 2
     },
     {
       id: "cpr-first-aid",
-      name: "CPR & First Aid Certification (AHA Guidelines)",
+      name: "CPR & First Aid Certification",
       price: "$110 per person",
-      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid following AHA guidelines. 2-year certification.",
+      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
       simplybookId: 3
     },
     {
       id: "first-aid",
-      name: "First Aid Certification (AHA Guidelines)",
+      name: "First Aid Certification",
       price: "$95 per person",
-      description: "Manage injuries like bleeding, burns, fractures per AHA guidelines. Workplace safety focus.",
+      description: "Covers bleeding, burns, fractures, scene safety & emergency action steps. Two‑year certification.",
       simplybookId: 4
     },
     {
-      id: "pediatric",
-      name: "Pediatric Training",
-      price: "$85 per person",
-      description: "Specialized training focusing on CPR and First Aid for infants and children.",
+      id: "babysitter",
+      name: "Babysitter Course (two‑day program)",
+      price: "$165 total",
+      description: "Two‑day babysitter training — lunch & snacks provided — includes Child/Infant CPR & First Aid certification cards.",
       simplybookId: 5
     },
     {
-      id: "babysitter",
-      name: "Babysitter Course",
-      price: "$65 per person",
-      description: "Essential skills for childcare providers, including child safety, basic first aid, and CPR.",
-      simplybookId: 6
+      id: "acls",
+      name: "Advanced Cardiac Life Support (ACLS)",
+      price: "$145 per person",
+      description: "Advanced resuscitation for healthcare providers: medications, airway management & defibrillation; builds on BLS skills.",
+      simplybookId: 6,
+      availableFrom: "2025-07-14"
+    },
+    {
+      id: "pals",
+      name: "Pediatric Advanced Life Support (PALS)",
+      price: "$145 per person",
+      description: "Advanced pediatric emergency care: assessment, rhythms, interventions & pediatric medication administration.",
+      simplybookId: 7,
+      availableFrom: "2025-07-14"
     },
     {
       id: "test",
-      name: "Test Payment (DELETE LATER)",
+      name: "Test Payment",
       price: "$0.50 per person",
       description: "For testing payment integration only.",
-      simplybookId: 7
+      simplybookId: 8
     },
   ]
 
@@ -94,8 +113,6 @@ export default function SchedulePage() {
         "cpr-first-aid-certification": "cpr-first-aid",
         "bls-certification": "bls",
         "first-aid-certification": "first-aid",
-        "pediatric-training": "pediatric",
-        "corporate-training": "corporate",
         "babysitter-course": "babysitter",
       }
       const serviceId = serviceMap[serviceParam]
@@ -221,25 +238,30 @@ export default function SchedulePage() {
 
       switch (formData.service) {
         case "cpr-first-aid":
-          amount = 11000 * participants
+          amount = 11000 * participants // $110.00
           break
         case "first-aid":
-          amount = 9500 * participants
+          amount = 9500 * participants // $95.00
           break
         case "bls":
-          amount = 9500 * participants
-          break
-        case "pediatric":
-          amount = 8500 * participants
+          amount = 7500 * participants // Updated Price: $75.00
           break
         case "babysitter":
-          amount = 6500 * participants
+          amount = 16500 // Updated Price: $165.00 total (not per participant)
+          break
+        case "acls": // Added ACLS
+          amount = 14500 * participants // $145.00
+          break
+        case "pals": // Added PALS
+          amount = 14500 * participants // $145.00
           break
         case "test":
-          amount = 50 * participants
+          amount = 50 * participants // $0.50
           break
         default:
-          amount = 9500 * participants
+          // Set a reasonable default or throw an error if service is unknown
+          console.warn(`Unknown service selected: ${formData.service}. Setting default amount.`)
+          amount = 9500 * participants // Example default
       }
 
       // Save booking details to localStorage before redirecting
@@ -335,11 +357,11 @@ export default function SchedulePage() {
 
       {/* Scheduling Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
-        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+        <div className="container px-4 md:px-6 mx-auto">
           {step === 1 && (
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Service List */}
-              <div className="flex flex-col">
+              <div className="flex flex-col lg:max-w-2xl">
                 <div className="mb-6">
                   <h2 className="text-3xl font-bold tracking-tighter">Book Your Session</h2>
                   <p className="text-gray-500 mt-2">Select your preferred date, time, and training service.</p>
@@ -354,26 +376,74 @@ export default function SchedulePage() {
                   <h3 className="text-xl font-bold mb-2">Available Services</h3>
                   <p className="text-sm text-gray-500 mb-4">Choose the training you need</p>
                   <div className="space-y-4">
-                    {services.map((service) => (
-                      <div key={service.id} className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <input
-                          type="radio"
-                          id={service.id}
-                          name="service"
-                          value={service.id}
-                          checked={formData.service === service.id}
-                          onChange={handleChange}
-                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 mt-1 flex-shrink-0"
-                        />
-                        <label htmlFor={service.id} className="flex-1 cursor-pointer">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-gray-800">{service.name}</span>
-                            <span className="text-sm text-gray-700 font-medium ml-2">{service.price}</span>
+                    {services.map((service) => {
+                      // Check if service has an availableFrom date and if it's in the future
+                      const availableFrom = service.availableFrom ? new Date(service.availableFrom) : null;
+                      const currentDate = new Date();
+                      const isAvailable = !availableFrom || currentDate >= availableFrom;
+                      
+                      // If not available, format the date for display
+                      const formattedAvailableDate = availableFrom 
+                        ? format(availableFrom, "MMMM d, yyyy") 
+                        : "";
+
+                      // For unavailable services, we'll apply a different style and make them unclickable
+                      if (!isAvailable) {
+                        return (
+                          <div
+                            key={service.id}
+                            className="flex items-start space-x-3 p-4 border border-gray-300 rounded-lg bg-gray-100 opacity-70 relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-10">
+                              <div className="bg-yellow-100 text-yellow-800 font-medium px-4 py-2 rounded-lg shadow-sm">
+                                Available from {formattedAvailableDate}
+                              </div>
+                            </div>
+                            
+                            <input
+                              type="radio"
+                              id={service.id}
+                              name="service"
+                              value={service.id}
+                              disabled={true}
+                              className="h-4 w-4 text-gray-400 border-gray-300 mt-1 flex-shrink-0 opacity-50"
+                            />
+                            <label htmlFor={service.id} className="flex-1 opacity-60">
+                              <div className="flex justify-between items-center">
+                                <span className="font-semibold text-gray-500">{service.name}</span>
+                                <span className="text-sm text-gray-500 font-medium ml-2">{service.price}</span>
+                              </div>
+                              <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+                            </label>
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">{service.description}</p>
-                        </label>
-                      </div>
-                    ))}
+                        );
+                      }
+                      
+                      // For available services, render normally
+                      return (
+                        <div
+                          key={service.id}
+                          className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <input
+                            type="radio"
+                            id={service.id}
+                            name="service"
+                            value={service.id}
+                            checked={formData.service === service.id}
+                            onChange={handleChange}
+                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 mt-1 flex-shrink-0"
+                          />
+                          <label htmlFor={service.id} className="flex-1 cursor-pointer">
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-gray-800">{service.name}</span>
+                              <span className="text-sm text-gray-700 font-medium ml-2">{service.price}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                          </label>
+                        </div>
+                      );
+                    })}
                   </div>
                   {errors.service && <p className="mt-2 text-sm text-red-600">{errors.service}</p>}
                   <p className="text-sm text-gray-500 mt-6">
@@ -483,14 +553,14 @@ export default function SchedulePage() {
                       </button>
                       {/* Conditionally Rendered DayPicker */}
                       {showCalendar && (
-                        <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg border border-gray-300"> {/* Positioning wrapper */}
+                        <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-300"> {/* Positioning wrapper - Added w-full back */}
                           <DayPicker 
                             mode="single"
                             selected={date}
                             onSelect={handleDateSelect}
-                            className="p-0" // Keep internal styling separate
+                            className="p-3" 
                             classNames={{
-                              root: `p-3 bg-white`, // Simplified root for dropdown
+                              root: `bg-white`,
                               caption: `flex justify-center items-center py-2 mb-2 relative`,
                               caption_label: `text-sm font-medium text-gray-900`,
                               nav: `flex items-center space-x-1`,
@@ -498,11 +568,11 @@ export default function SchedulePage() {
                               nav_button_previous: `absolute left-1`,
                               nav_button_next: `absolute right-1`,
                               table: `w-full border-collapse`,
-                              head_row: `flex font-medium text-gray-500 text-xs`,
-                              head_cell: `w-full pb-2`,
-                              row: `flex w-full mt-1.5`,
-                              cell: `flex-1 text-center text-sm p-0`,
-                              day: `h-8 w-8 p-0 rounded-md hover:bg-gray-100 transition-colors`,
+                              head_row: `text-xs font-medium text-gray-500`,
+                              head_cell: `text-center py-1`,
+                              row: `mt-1`,
+                              cell: `text-center p-0 relative text-sm`,
+                              day: `h-8 w-8 mx-auto font-normal p-0 rounded-md aria-selected:opacity-100 hover:bg-gray-100 transition-colors`,
                               day_today: `font-bold text-red-600`,
                               day_selected: `bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 rounded-md`,
                               day_outside: `text-gray-400 opacity-50`,

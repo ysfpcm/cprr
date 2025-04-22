@@ -9,7 +9,7 @@ import { SiteFooter } from "@/components/site-footer"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Anytime CPR & Health Services",
+  title: "Anytime CPR Health Services",
   description: "Professional CPR, First Aid, and Life-Saving Training for Individuals and Organizations",
 }
 

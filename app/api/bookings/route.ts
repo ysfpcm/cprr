@@ -330,11 +330,13 @@ async function getSimplybookEventId(serviceName: string, companyLogin: string, t
     
     // Fallback mapping if API call fails
     const serviceMap: Record<string, number> = {
-      "BLS for Healthcare Providers": 2,
-      "CPR & First Aid Certification (AHA Guidelines)": 3,
-      "First Aid Certification (AHA Guidelines)": 4,
-      "Pediatric Training": 5,
-      "Babysitter Course": 6,
+      // Updated names and added ACLS/PALS
+      "BLS for Healthcare Providers (American Heart Association Compliant)": 2,
+      "CPR & First Aid Certification": 3,
+      "First Aid Certification": 4,
+      "Babysitter Course (two‑day program)": 6,
+      "Advanced Cardiac Life Support (ACLS)": 8, // Added ACLS
+      "Pediatric Advanced Life Support (PALS)": 9, // Added PALS
       "Test Payment (DELETE LATER)": 7,
     };
 

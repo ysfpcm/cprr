@@ -53,23 +53,33 @@ export function SiteFooter() {
             <h4 className="font-medium text-sm">Services</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/services/cpr" className="text-gray-500 hover:text-gray-900 text-sm">
-                  CPR Training
+                <Link href="/schedule?service=bls" className="text-gray-500 hover:text-gray-900 text-sm">
+                  BLS for Healthcare Providers
                 </Link>
               </li>
               <li>
-                <Link href="/services/first-aid" className="text-gray-500 hover:text-gray-900 text-sm">
+                <Link href="/schedule?service=cpr-first-aid" className="text-gray-500 hover:text-gray-900 text-sm">
+                  CPR & First Aid
+                </Link>
+              </li>
+              <li>
+                <Link href="/schedule?service=first-aid" className="text-gray-500 hover:text-gray-900 text-sm">
                   First Aid
                 </Link>
               </li>
               <li>
-                <Link href="/services/bls" className="text-gray-500 hover:text-gray-900 text-sm">
-                  BLS Certification
+                <Link href="/schedule?service=babysitter" className="text-gray-500 hover:text-gray-900 text-sm">
+                  Babysitter Course
                 </Link>
               </li>
-              <li>
-                <Link href="/services/pediatric" className="text-gray-500 hover:text-gray-900 text-sm">
-                  Pediatric Training
+               <li>
+                <Link href="/schedule?service=acls" className="text-gray-500 hover:text-gray-900 text-sm">
+                  ACLS
+                </Link>
+              </li>
+               <li>
+                <Link href="/schedule?service=pals" className="text-gray-500 hover:text-gray-900 text-sm">
+                  PALS
                 </Link>
               </li>
             </ul>

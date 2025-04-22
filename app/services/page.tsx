@@ -2,74 +2,74 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Award, BookOpen, Clock, Heart, Shield, Users } from "lucide-react"
+import { Award, Clock, Heart, Shield } from "lucide-react"
 
 export default function ServicesPage() {
   const services = [
     {
-      icon: Heart,
-      title: "CPR Training",
-      description: "Learn life-saving CPR for healthcare providers",
+      icon: Award,
+      title: "BLS for Healthcare Providers (American Heart Association Compliant)",
+      description: "Basic Life Support for healthcare professionals; high‑quality CPR, airway & team‑based skills.",
       features: [
-        "Adult, Child, and Infant CPR",
-        "Hands-on practice with mannequins",
-        "AED (Automated External Defibrillator) training",
-        "2-year certification upon completion",
+        "High-quality CPR techniques",
+        "Airway management basics",
+        "Team-based resuscitation scenarios",
+        "AHA-compliant certification",
       ],
     },
     {
-      icon: Award,
-      title: "BLS Certification",
-      description: "Basic Life Support for healthcare professionals",
+      icon: Heart,
+      title: "CPR & First Aid Certification",
+      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
       features: [
-        "Advanced CPR techniques",
-        "Airway management",
-        "Team-based resuscitation",
-        "Healthcare provider certification",
+        "Adult, Child, and Infant CPR",
+        "AED (Automated External Defibrillator) training",
+        "Comprehensive First Aid skills",
+        "Two-year certification upon completion",
       ],
     },
     {
       icon: Shield,
       title: "First Aid Certification",
-      description: "Comprehensive first aid training for workplace safety",
+      description: "Covers bleeding, burns, fractures, scene safety & emergency action steps. Two‑year certification.",
       features: [
-        "Wound care and bleeding control",
-        "Burn treatment and bandaging techniques",
-        "Fracture and sprain management",
-        "Emergency response protocols",
-      ],
-    },
-    {
-      icon: BookOpen,
-      title: "Pediatric Training",
-      description: "Specialized training for infant and child emergencies",
-      features: [
-        "Infant and child CPR techniques",
-        "Choking management for children",
-        "Pediatric first aid",
-        "Child safety education",
-      ],
-    },
-    {
-      icon: Users,
-      title: "Corporate Training",
-      description: "Customized training for businesses and organizations",
-      features: [
-        "On-site training at your location",
-        "Group discounts available",
-        "Flexible scheduling for your team",
-        "Compliance with industry regulations",
+        "Bleeding control and wound care",
+        "Burn and fracture management",
+        "Scene safety assessment",
+        "Emergency action steps",
       ],
     },
     {
       icon: Clock,
-      title: "Babysitter Course",
-      description: "Essential skills for babysitters and childcare providers",
+      title: "Babysitter Course (two‑day program)",
+      description: "Two‑day babysitter training — lunch & snacks provided — includes Child/Infant CPR & First Aid certification cards.",
       features: [
-        "Child CPR and first aid",
-        "Child safety and supervision",
-        "Basic childcare techniques",
-        "Emergency response for childcare",
+        "Child/Infant CPR & First Aid",
+        "Child safety and supervision techniques",
+        "Basic childcare skills",
+        "Lunch & snacks included",
+      ],
+    },
+    {
+      icon: Heart,
+      title: "Advanced Cardiac Life Support (ACLS)",
+      description: "Advanced resuscitation for healthcare providers: medications, airway management & defibrillation; builds on BLS skills.",
+      features: [
+        "Advanced airway management",
+        "Pharmacology (medications)",
+        "Rhythm interpretation & defibrillation",
+        "Builds upon BLS skills",
+      ],
+    },
+    {
+      icon: Heart,
+      title: "Pediatric Advanced Life Support (PALS)",
+      description: "Advanced pediatric emergency care: assessment, rhythms, interventions & pediatric medication administration.",
+      features: [
+        "Pediatric assessment approaches",
+        "Rhythm disturbances & interventions",
+        "Pediatric medication administration",
+        "Advanced pediatric emergency care",
       ],
     },
   ]

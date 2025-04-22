@@ -77,11 +77,12 @@ function BookingConfirmation() {
           const mapServiceNameToSimplybookId = (serviceName: string): number => {
             // Map service names to SimplyBookMe event IDs
             const serviceMap: Record<string, number> = {
-              "BLS for Healthcare Providers": 2,
-              "CPR & First Aid Certification (AHA Guidelines)": 3,
-              "First Aid Certification (AHA Guidelines)": 4,
-              "Pediatric Training": 5,
-              "Babysitter Course": 6,
+              "BLS for Healthcare Providers (American Heart Association Compliant)": 2,
+              "CPR & First Aid Certification": 3,
+              "First Aid Certification": 4,
+              "Babysitter Course (two‑day program)": 6,
+              "Advanced Cardiac Life Support (ACLS)": 8,
+              "Pediatric Advanced Life Support (PALS)": 9,
               "Test Payment (DELETE LATER)": 7,
             };
 
@@ -192,8 +193,8 @@ function BookingConfirmation() {
               ) : (
                 <p className="text-gray-500 mt-2">
                   {emailSent 
-                    ? "Your booking is confirmed. You'll receive a confirmation email from SimplyBookMe with all the details."
-                    : "Your booking is being processed. You should receive a confirmation email from SimplyBookMe shortly."}
+                    ? "Your booking is confirmed. You'll receive a confirmation email from Anytime CPR Health Services with all the details."
+                    : "Your booking is being processed. You should receive a confirmation email shortly."}
                 </p>
               )}
               {error && (
@@ -240,12 +241,12 @@ function BookingConfirmation() {
                   <p className="mt-2 text-sm text-gray-500">
                     If you need to reschedule or cancel your booking, please contact us at least 24 hours in advance.
                     You can email us at{" "}
-                    <a href="mailto:dawnmcclain@hotmail.com" className="text-green-600 hover:text-green-800">
-                    dawnmcclain@hotmail.com
+                    <a href="mailto:info@anytimecprhealthservices.com" className="text-green-600 hover:text-green-800">
+                      info@anytimecprhealthservices.com
                     </a>{" "}
                     or call at{" "}
-                    <a href="tel:+14077577511" className="text-green-600 hover:text-green-800">
-                      (407) 757-7511
+                    <a href="tel:+13463420079" className="text-green-600 hover:text-green-800">
+                      (346) 342-0079
                     </a>
                     .
                   </p>
