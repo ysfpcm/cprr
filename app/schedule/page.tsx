@@ -376,7 +376,7 @@ export default function SchedulePage() {
                   <h3 className="text-xl font-bold mb-2">Available Services</h3>
                   <p className="text-sm text-gray-500 mb-4">Choose the training you need</p>
                   <div className="space-y-4">
-                    {services.map((service) => {
+                    {services.filter(service => service.id !== "test").map((service) => {
                       // Check if service has an availableFrom date and if it's in the future
                       const availableFrom = service.availableFrom ? new Date(service.availableFrom) : null;
                       const currentDate = new Date();
@@ -388,7 +388,7 @@ export default function SchedulePage() {
                         : "";
 
                       // For unavailable services, we'll apply a different style and make them unclickable
-                      if (!isAvailable) {
+                      if (!isAvailable)
                         return (
                           <div
                             key={service.id}
@@ -417,7 +417,6 @@ export default function SchedulePage() {
                             </label>
                           </div>
                         );
-                      }
                       
                       // For available services, render normally
                       return (
