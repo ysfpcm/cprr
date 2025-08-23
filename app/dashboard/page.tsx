@@ -10,8 +10,22 @@ import { useRouter } from "next/navigation"
 // Define types for status filtering
 type FilterStatus = "all" | BookingStatus;
 
-// Available time slots for rescheduling
-const timeSlots: string[] = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"]
+// Generate 24-hour time slots for rescheduling
+const generate24HourTimeSlots = () => {
+  const slots = []
+  for (let hour = 0; hour < 24; hour++) {
+    const time = new Date()
+    time.setHours(hour, 0, 0, 0)
+    slots.push(time.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    }))
+  }
+  return slots
+}
+
+const timeSlots: string[] = generate24HourTimeSlots()
 
 // Admin emails that are allowed to access the dashboard
 const ADMIN_EMAILS = ["marlx0879@gmail.com", "info@anytimecpr.com"]

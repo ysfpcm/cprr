@@ -48,6 +48,7 @@ function getSimplybookEventIdForService(serviceName: string): number {
   // Map service names to SimplyBookMe event IDs
   const serviceMap: Record<string, number> = {
     "BLS for Healthcare Providers": 2,
+    "CPR (Only) Certification for Non-Healthcare Personnel": 9,
     "CPR & First Aid Certification (AHA Guidelines)": 3,
     "First Aid Certification (AHA Guidelines)": 4,
     "Pediatric Training": 5,

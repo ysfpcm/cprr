@@ -48,7 +48,22 @@ export default function SchedulePage() {
     time?: string;
   }>({})
 
-  const availableTimeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"]
+  // Generate 24-hour time slots (every hour)
+  const generate24HourTimeSlots = () => {
+    const slots = []
+    for (let hour = 0; hour < 24; hour++) {
+      const time = new Date()
+      time.setHours(hour, 0, 0, 0)
+      slots.push(time.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      }))
+    }
+    return slots
+  }
+  
+  const availableTimeSlots = generate24HourTimeSlots()
 
   const services: Service[] = [
     {
@@ -59,11 +74,11 @@ export default function SchedulePage() {
       simplybookId: 2
     },
     {
-      id: "cpr-first-aid",
-      name: "CPR & First Aid Certification",
-      price: "$110 per person",
-      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
-      simplybookId: 3
+      id: "cpr-non-healthcare",
+      name: "CPR (Only) Certification for Non-Healthcare Personnel",
+      price: "$65 per person",
+      description: "Essential CPR training for laypersons, workplace safety, and community emergency preparedness. Covers adult, child, and infant CPR with AED training.",
+      simplybookId: 9
     },
     {
       id: "first-aid",
@@ -71,6 +86,13 @@ export default function SchedulePage() {
       price: "$95 per person",
       description: "Covers bleeding, burns, fractures, scene safety & emergency action steps. Two‑year certification.",
       simplybookId: 4
+    },
+    {
+      id: "cpr-first-aid",
+      name: "CPR & First Aid Certification",
+      price: "$130 per person",
+      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
+      simplybookId: 3
     },
     {
       id: "babysitter",
@@ -112,6 +134,8 @@ export default function SchedulePage() {
       const serviceMap: { [key: string]: string } = {
         "cpr-first-aid-certification": "cpr-first-aid",
         "bls-certification": "bls",
+        "cpr-certification-for-non-healthcare-personnel": "cpr-non-healthcare",
+        "cpr-for-non-healthcare-personnel": "cpr-non-healthcare",
         "first-aid-certification": "first-aid",
         "babysitter-course": "babysitter",
       }
@@ -238,13 +262,16 @@ export default function SchedulePage() {
 
       switch (formData.service) {
         case "cpr-first-aid":
-          amount = 11000 * participants // $110.00
+          amount = 13000 * participants // $130.00
           break
         case "first-aid":
           amount = 9500 * participants // $95.00
           break
         case "bls":
           amount = 7500 * participants // Updated Price: $75.00
+          break
+        case "cpr-non-healthcare":
+          amount = 6500 * participants // $65.00
           break
         case "babysitter":
           amount = 16500 // Updated Price: $165.00 total (not per participant)

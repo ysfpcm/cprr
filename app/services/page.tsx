@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Award, Clock, Heart, Shield } from "lucide-react"
+import { Award, Clock, Heart, Shield, User } from "lucide-react"
 
 export default function ServicesPage() {
   const services = [
@@ -18,14 +18,14 @@ export default function ServicesPage() {
       ],
     },
     {
-      icon: Heart,
-      title: "CPR & First Aid Certification",
-      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
+      icon: User,
+      title: "CPR (Only) Certification for Non-Healthcare Personnel",
+      description: "Essential CPR training for laypersons, workplace safety, and community emergency preparedness.",
       features: [
         "Adult, Child, and Infant CPR",
         "AED (Automated External Defibrillator) training",
-        "Comprehensive First Aid skills",
-        "Two-year certification upon completion",
+        "Workplace safety compliance",
+        "Community emergency preparedness",
       ],
     },
     {
@@ -37,6 +37,17 @@ export default function ServicesPage() {
         "Burn and fracture management",
         "Scene safety assessment",
         "Emergency action steps",
+      ],
+    },
+    {
+      icon: Heart,
+      title: "CPR & First Aid Certification",
+      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
+      features: [
+        "Adult, Child, and Infant CPR",
+        "AED (Automated External Defibrillator) training",
+        "Comprehensive First Aid skills",
+        "Two-year certification upon completion",
       ],
     },
     {

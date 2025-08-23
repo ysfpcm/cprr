@@ -78,11 +78,12 @@ function BookingConfirmation() {
             // Map service names to SimplyBookMe event IDs
             const serviceMap: Record<string, number> = {
               "BLS for Healthcare Providers (American Heart Association Compliant)": 2,
+              "CPR (Only) Certification for Non-Healthcare Personnel": 9,
               "CPR & First Aid Certification": 3,
               "First Aid Certification": 4,
               "Babysitter Course (two‑day program)": 6,
               "Advanced Cardiac Life Support (ACLS)": 8,
-              "Pediatric Advanced Life Support (PALS)": 9,
+              "Pediatric Advanced Life Support (PALS)": 10,
               "Test Payment (DELETE LATER)": 7,
             };
 

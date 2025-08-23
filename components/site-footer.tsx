@@ -58,6 +58,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/schedule?service=cpr-non-healthcare" className="text-gray-500 hover:text-gray-900 text-sm">
+                  CPR (Only) for Non-Healthcare Personnel
+                </Link>
+              </li>
+              <li>
                 <Link href="/schedule?service=cpr-first-aid" className="text-gray-500 hover:text-gray-900 text-sm">
                   CPR & First Aid
                 </Link>
