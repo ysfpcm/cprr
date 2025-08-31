@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
 
 export function SiteFooter() {
@@ -6,24 +7,15 @@ export function SiteFooter() {
     <footer className="w-full border-t bg-white">
       <div className="container mx-auto max-w-7xl flex flex-col md:flex-row py-10 md:py-12 px-4 md:px-6">
         <div className="flex-1 mb-8 md:mb-0">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="bg-red-600 p-1 rounded-md">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6 text-white"
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
+          <div className="mb-4">
+            <div className="relative w-64 h-20">
+              <Image
+                src="/logo.jpg"
+                alt="Anytime CPR Health Services Logo"
+                fill
+                className="object-contain"
+              />
             </div>
-            <span className="font-bold text-xl">Anytime CPR Health Services</span>
           </div>
           <p className="text-gray-500 max-w-md">
             Professional CPR, First Aid, and Life-Saving Training for Individuals and Organizations. Available anytime

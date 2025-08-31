@@ -1,13 +1,20 @@
 import Link from "next/link"
-import { Heart } from "lucide-react"
+import Image from "next/image"
 
 export function SiteLogo() {
   return (
-    <Link href="/" className="flex items-center space-x-2">
-      <div className="bg-red-600 p-1 rounded-md">
-        <Heart className="h-6 w-6 text-white" />
+    <Link href="/" className="flex items-center">
+      <div className="relative w-48 h-16">
+        <Image
+          src="/logo.PNG"
+          alt="Anytime CPR Health Services Logo"
+          fill
+          className="object-contain"
+        />
       </div>
-      <span className="font-bold text-xl">Anytime CPR Health Services</span>
+      <span className="-ml-2 text-xl font-bold text-gray-900 hidden md:block">
+        Anytime CPR Health Services
+      </span>
     </Link>
   )
 }

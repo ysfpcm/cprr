@@ -385,6 +385,27 @@ export default function SchedulePage() {
       {/* Scheduling Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
         <div className="container px-4 md:px-6 mx-auto">
+          {/* Booking Disabled Notice */}
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-yellow-800 mb-2">Booking Temporarily Disabled</h3>
+              <p className="text-yellow-700 mb-4">
+                We are currently revising our training programs to ensure CPR and First Aid are taught the <em>right way</em>. 
+                Online booking is temporarily paused while we update our curriculum.
+              </p>
+              <p className="text-sm text-yellow-600">
+                Please contact us for updates or to be notified when classes resume.
+              </p>
+            </div>
+          </div>
+
           {step === 1 && (
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Service List */}
@@ -392,6 +413,7 @@ export default function SchedulePage() {
                 <div className="mb-6">
                   <h2 className="text-3xl font-bold tracking-tighter">Book Your Session</h2>
                   <p className="text-gray-500 mt-2">Select your preferred date, time, and training service.</p>
+                  <p className="text-sm text-gray-400 mt-1">⚠️ Booking is temporarily disabled.</p>
                 </div>
 
                 <motion.div
@@ -445,11 +467,11 @@ export default function SchedulePage() {
                           </div>
                         );
                       
-                      // For available services, render normally
+                      // For available services, render normally but disabled
                       return (
                         <div
                           key={service.id}
-                          className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                          className="flex items-start space-x-3 p-4 border rounded-lg bg-gray-50 opacity-60 transition-colors"
                         >
                           <input
                             type="radio"
@@ -458,14 +480,15 @@ export default function SchedulePage() {
                             value={service.id}
                             checked={formData.service === service.id}
                             onChange={handleChange}
-                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 mt-1 flex-shrink-0"
+                            disabled={true}
+                            className="h-4 w-4 text-gray-400 border-gray-300 mt-1 flex-shrink-0 opacity-50"
                           />
-                          <label htmlFor={service.id} className="flex-1 cursor-pointer">
+                          <label htmlFor={service.id} className="flex-1 cursor-not-allowed">
                             <div className="flex justify-between items-center">
-                              <span className="font-semibold text-gray-800">{service.name}</span>
-                              <span className="text-sm text-gray-700 font-medium ml-2">{service.price}</span>
+                              <span className="font-semibold text-gray-500">{service.name}</span>
+                              <span className="text-sm text-gray-500 font-medium ml-2">{service.price}</span>
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                            <p className="text-sm text-gray-500 mt-1">{service.description}</p>
                           </label>
                         </div>
                       );
@@ -505,7 +528,8 @@ export default function SchedulePage() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className={`w-full rounded-md border ${errors.name ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                      disabled={true}
+                      className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none`}
                     />
                     {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
                   </div>
@@ -523,7 +547,8 @@ export default function SchedulePage() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full rounded-md border ${errors.email ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                      disabled={true}
+                      className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none`}
                     />
                     {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
                   </div>
@@ -541,7 +566,8 @@ export default function SchedulePage() {
                       required
                       value={formData.phone}
                       onChange={handleChange} // Uses formatPhoneNumberInput from handleChange
-                      className={`w-full rounded-md border ${errors.phone ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.phone ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                      disabled={true}
+                      className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none`}
                     />
                     {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
                   </div>
@@ -559,7 +585,8 @@ export default function SchedulePage() {
                       placeholder="1"
                       value={formData.participants}
                       onChange={handleChange}
-                      className={`w-full rounded-md border ${errors.participants ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.participants ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                      disabled={true}
+                      className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none`}
                     />
                     {errors.participants && <p className="text-sm text-red-600">{errors.participants}</p>}
                   </div>
@@ -572,10 +599,11 @@ export default function SchedulePage() {
                       <button
                         type="button"
                         onClick={() => setShowCalendar(!showCalendar)}
-                        className={`w-full flex justify-start items-center rounded-md border ${errors.date ? 'border-red-500' : 'border-gray-300'} bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${errors.date ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent`}
+                        disabled={true}
+                        className={`w-full flex justify-start items-center rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm shadow-sm text-gray-500 cursor-not-allowed focus:outline-none`}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" /> {/* Use the lucide icon */}
-                        {date ? format(date, "MMMM d, yyyy") : <span className="text-gray-500">Pick a date</span>}
+                        <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" /> {/* Use the lucide icon */}
+                        {date ? format(date, "MMMM d, yyyy") : <span className="text-gray-400">Pick a date</span>}
                       </button>
                       {/* Conditionally Rendered DayPicker */}
                       {showCalendar && (
@@ -623,8 +651,8 @@ export default function SchedulePage() {
                         name="time"
                         value={formData.time}
                         onChange={handleChange}
-                        disabled={!date || availableTimeSlots.length === 0} // Disable if no date or no slots
-                        className={`w-full rounded-md border ${errors.time ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 ${errors.time ? 'focus:ring-red-500' : 'focus:ring-hospitality-500'} focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                        disabled={true} // Always disabled
+                        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none`}
                       >
                         <option value="">Select a time slot</option>
                         {isLoadingSlots ? (
@@ -646,11 +674,12 @@ export default function SchedulePage() {
                   {/* Continue Button with Animation */}
                   <motion.button
                     type="submit"
-                    className="w-full inline-flex h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-red-700 disabled:opacity-50"
+                    disabled={true}
+                    className="w-full inline-flex h-10 items-center justify-center rounded-md bg-gray-400 px-4 text-sm font-medium text-white shadow cursor-not-allowed"
                     animate={isShaking ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }} // Shake effect
                     transition={isShaking ? { duration: 0.3 } : {}} // Animation duration
                   >
-                    Continue to Review
+                    Booking Temporarily Disabled
                   </motion.button>
 
                   <p className="text-sm text-gray-500 text-center">

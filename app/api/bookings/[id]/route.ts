@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { Booking, BookingStatus } from '../../../lib/bookings';
 
-// Extend the global scope to store bookings. Disable eslint rule for no-var.
+// Extend the global scope to store bookings.
 declare global {
-  // eslint-disable-next-line no-var
   var bookings: Booking[];
 }
 

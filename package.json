@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NEXT_DISABLE_TYPESCRIPT=1 NEXT_DISABLE_ESLINT=1 next build",
+    "build": "cross-env NEXT_DISABLE_TYPESCRIPT=1 NEXT_DISABLE_ESLINT=1 next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -13,6 +13,8 @@
     "@stripe/stripe-js": "^6.1.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^7.0.1",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
@@ -35,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
     "postcss-import": "^16.1.0",

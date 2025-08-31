@@ -4,7 +4,6 @@ import { format, parseISO, parse } from 'date-fns';
 
 // Declare global type for storing bookings
 declare global {
-  // eslint-disable-next-line no-var
   var bookings: Booking[];
 }
 

@@ -152,10 +152,10 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Ready to Get Certified?</h2>
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Training Update in Progress</h2>
               <p className="text-gray-500 md:text-xl">
-                Our flexible scheduling allows you to find a class that fits your busy life. Book a session today and
-                gain the confidence to save lives.
+                We are currently revising our training programs to ensure CPR and First Aid are taught the right way. 
+                Contact us to be notified when classes resume.
               </p>
             </motion.div>
             <motion.div
@@ -166,7 +166,7 @@ export default function Home() {
             >
               <Link
                 href="/schedule"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-red-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-red-700"
+                className="inline-flex h-12 items-center justify-center rounded-md bg-gray-400 px-8 text-sm font-medium text-white shadow cursor-not-allowed"
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedule a Class

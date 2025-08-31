@@ -2,89 +2,9 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Award, Clock, Heart, Shield, User } from "lucide-react"
+import { AlertTriangle, Mail } from "lucide-react"
 
 export default function ServicesPage() {
-  const services = [
-    {
-      icon: Award,
-      title: "BLS for Healthcare Providers (American Heart Association Compliant)",
-      description: "Basic Life Support for healthcare professionals; high‑quality CPR, airway & team‑based skills.",
-      features: [
-        "High-quality CPR techniques",
-        "Airway management basics",
-        "Team-based resuscitation scenarios",
-        "AHA-compliant certification",
-      ],
-    },
-    {
-      icon: User,
-      title: "CPR (Only) Certification for Non-Healthcare Personnel",
-      description: "Essential CPR training for laypersons, workplace safety, and community emergency preparedness.",
-      features: [
-        "Adult, Child, and Infant CPR",
-        "AED (Automated External Defibrillator) training",
-        "Workplace safety compliance",
-        "Community emergency preparedness",
-      ],
-    },
-    {
-      icon: Shield,
-      title: "First Aid Certification",
-      description: "Covers bleeding, burns, fractures, scene safety & emergency action steps. Two‑year certification.",
-      features: [
-        "Bleeding control and wound care",
-        "Burn and fracture management",
-        "Scene safety assessment",
-        "Emergency action steps",
-      ],
-    },
-    {
-      icon: Heart,
-      title: "CPR & First Aid Certification",
-      description: "Combined CPR (Adult/Child/Infant/AED) & First Aid. Two‑year certification.",
-      features: [
-        "Adult, Child, and Infant CPR",
-        "AED (Automated External Defibrillator) training",
-        "Comprehensive First Aid skills",
-        "Two-year certification upon completion",
-      ],
-    },
-    {
-      icon: Clock,
-      title: "Babysitter Course (two‑day program)",
-      description: "Two‑day babysitter training — lunch & snacks provided — includes Child/Infant CPR & First Aid certification cards.",
-      features: [
-        "Child/Infant CPR & First Aid",
-        "Child safety and supervision techniques",
-        "Basic childcare skills",
-        "Lunch & snacks included",
-      ],
-    },
-    {
-      icon: Heart,
-      title: "Advanced Cardiac Life Support (ACLS)",
-      description: "Advanced resuscitation for healthcare providers: medications, airway management & defibrillation; builds on BLS skills.",
-      features: [
-        "Advanced airway management",
-        "Pharmacology (medications)",
-        "Rhythm interpretation & defibrillation",
-        "Builds upon BLS skills",
-      ],
-    },
-    {
-      icon: Heart,
-      title: "Pediatric Advanced Life Support (PALS)",
-      description: "Advanced pediatric emergency care: assessment, rhythms, interventions & pediatric medication administration.",
-      features: [
-        "Pediatric assessment approaches",
-        "Rhythm disturbances & interventions",
-        "Pediatric medication administration",
-        "Advanced pediatric emergency care",
-      ],
-    },
-  ]
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -101,81 +21,97 @@ export default function ServicesPage() {
                 Our Services
               </h1>
               <p className="mx-auto max-w-[700px] text-white md:text-xl">
-                Comprehensive life-saving training programs for individuals and organizations
+                Comprehensive life-saving training programs organized by your needs
               </p>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Services Grid */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
-        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service, index) => (
-              <motion.div
-                key={service.title}
-                className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className="p-6">
-                  <div className="p-2 bg-red-100 rounded-full w-fit mb-3">
-                    <service.icon className="h-6 w-6 text-red-600" />
-                  </div>
-                  <h3 className="text-xl font-bold">{service.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{service.description}</p>
-                  <ul className="space-y-2 text-sm mt-4">
-                    {service.features.map((feature, i) => (
-                      <li key={i} className="flex items-center">
-                        <span className="mr-2 h-1.5 w-1.5 rounded-full bg-red-600"></span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="mt-auto p-6 pt-0">
-                  <Link
-                    href={`/schedule?service=${service.title.toLowerCase().replace(/ /g, '-')}`}
-                    className="inline-flex w-full h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-red-700"
-                  >
-                    Schedule Training
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100">
-        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+      {/* Training Update Notice Section */}
+      <section className="w-full py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 md:px-6 mx-auto max-w-4xl">
           <motion.div
-            className="flex flex-col items-center justify-center space-y-4 text-center"
+            className="text-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Need a Custom Training Solution?
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-yellow-100 rounded-full">
+                <AlertTriangle className="h-12 w-12 text-yellow-600" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-gray-900 mb-4">
+              Training Update in Progress
+            </h2>
+          </motion.div>
+          
+          <motion.div
+            className="bg-white rounded-lg shadow-lg p-8 md:p-12 border border-gray-200"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="text-center space-y-6">
+              <div className="space-y-4">
+                <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
+                  At Anytime CPR Health Services, we believe CPR and First Aid should be taught the{" "}
+                  <em className="font-semibold text-gray-900">right way</em>. We are in the process of revising our programs to reflect this standard.
+                </p>
+                
+                <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
+                  While online booking is paused, we invite you to{" "}
+                  <Link href="/contact" className="text-red-600 hover:text-red-700 underline font-medium">
+                    contact us
+                  </Link>{" "}
+                  with questions or to be notified when classes resume.
+                </p>
+              </div>
+              
+              <div className="pt-6">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center justify-center rounded-md bg-red-600 px-8 py-3 text-base font-medium text-white shadow transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                >
+                  <Mail className="mr-2 h-5 w-5" />
+                  Contact Us for Updates
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Custom Training Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-white border-t border-gray-100">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <motion.div
+            className="flex flex-col items-center justify-center space-y-8 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="space-y-4 max-w-3xl">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
+                Custom Training Solutions
               </h2>
-              <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
-                We can tailor our training programs to meet your specific needs and requirements.
+              <p className="text-lg text-gray-600 md:text-xl">
+                Need specialized training for your organization? We can tailor our programs to meet your specific requirements, 
+                including on-site training, custom schedules, and industry-specific certifications.
               </p>
             </div>
+            
             <div className="space-x-4 pt-4">
               <Link
                 href="/contact"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-red-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-red-700"
+                className="inline-flex h-12 items-center justify-center rounded-md bg-red-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
-                Contact Us
+                Contact Us for Custom Training
               </Link>
               <Link
                 href="/about"
-                className="inline-flex h-12 items-center justify-center rounded-md border border-gray-300 bg-white px-8 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:bg-gray-100"
+                className="inline-flex h-12 items-center justify-center rounded-md border border-gray-300 bg-white px-8 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
                 Learn More About Us
               </Link>

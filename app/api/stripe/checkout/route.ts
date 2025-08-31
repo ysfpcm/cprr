@@ -45,8 +45,11 @@ function getBaseUrl(request: Request): string {
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('Missing Stripe secret key')
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured' },
+        { status: 500 }
+      )
     }
 
     const body = await request.json()
