@@ -17,7 +17,7 @@ export function SiteHeader() {
         <div className="flex items-center space-x-2">
           <div className="relative w-12 h-12">
             <Image
-              src="/logo.PNG"
+              src="/logo.jpg"
               alt="Anytime CPR Health Services Logo"
               fill
               className="object-contain"
