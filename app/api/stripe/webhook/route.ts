@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { getSimplybookEventIdForService } from '../../../lib/services'
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -41,45 +42,6 @@ function getBaseUrl(request: Request): string {
   
   console.log('Formatted base URL:', baseUrl);
   return baseUrl;
-}
-
-// Add this helper function at the top of the file
-function getSimplybookEventIdForService(serviceName: string): number {
-  // Map service names to SimplyBookMe event IDs
-  const serviceMap: Record<string, number> = {
-    "BLS for Healthcare Providers": 2,
-    "CPR (Only) Certification for Non-Healthcare Personnel": 9,
-    "CPR & First Aid Certification (AHA Guidelines)": 3,
-    "First Aid Certification (AHA Guidelines)": 4,
-    "Pediatric Training": 5,
-    "Babysitter Course": 6,
-    "Test Payment (DELETE LATER)": 7,
-  };
-
-  // Try to find a direct match first
-  if (serviceName in serviceMap) {
-    return serviceMap[serviceName];
-  }
-
-  // If no direct match, try case-insensitive match
-  const lowerServiceName = serviceName.toLowerCase();
-  for (const [name, id] of Object.entries(serviceMap)) {
-    if (name.toLowerCase() === lowerServiceName) {
-      return id;
-    }
-  }
-
-  // If no match found, check for partial matches
-  for (const [name, id] of Object.entries(serviceMap)) {
-    if (name.toLowerCase().includes(lowerServiceName) || 
-        lowerServiceName.includes(name.toLowerCase())) {
-      return id;
-    }
-  }
-
-  // Default to 1 if no match found
-  console.warn(`No SimplyBookMe event ID mapping found for "${serviceName}", defaulting to 1`);
-  return 1;
 }
 
 // Helper to process checkout.session.completed event
@@ -136,7 +98,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
             status: 'upcoming',
             notes: `Booking from Stripe checkout.`,
             sessionId: session.id,
-            simplybookEventId: getSimplybookEventIdForService(service) // Add SimplyBookMe event ID
+            simplybookEventId: service ? getSimplybookEventIdForService(service) : undefined
           }),
         })
         
@@ -262,4 +224,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}
