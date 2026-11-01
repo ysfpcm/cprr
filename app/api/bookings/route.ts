@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Booking, getInitialBookings } from '../../lib/bookings'
+import { getSimplybookEventIdForService } from '../../lib/services'
 import { format, parseISO, parse } from 'date-fns';
 
 // Declare global type for storing bookings
@@ -312,36 +313,12 @@ async function getSimplybookEventId(serviceName: string, companyLogin: string, t
       }
     }
     
-    // If no matches at all, get the first event as fallback (if any events exist)
-    if (Object.keys(events).length > 0) {
-      const firstEventId = Object.keys(events)[0];
-      const firstName = events[firstEventId].name;
-      console.log(`No match found for "${serviceName}". Using first available event "${firstName}" (ID ${firstEventId})`);
-      return parseInt(firstEventId, 10);
-    }
-    
-    // Final fallback if no events exist
-    console.warn(`No SimplyBook.me events found. Using default ID 1 for "${serviceName}"`);
-    return 1;
+    throw new Error(`No SimplyBook.me event found for "${serviceName}"`);
   } catch (error) {
     console.error("Error fetching SimplyBook.me events:", error);
-    console.warn(`Using fallback event ID mapping for "${serviceName}"`);
-    
-    // Fallback mapping if API call fails
-    const serviceMap: Record<string, number> = {
-      // Updated names and added ACLS/PALS
-      "BLS for Healthcare Providers (American Heart Association Compliant)": 2,
-      "CPR (Only) Certification for Non-Healthcare Personnel": 9,
-      "CPR & First Aid Certification": 3,
-      "First Aid Certification": 4,
-      "Babysitter Course (two‑day program)": 6,
-      "Advanced Cardiac Life Support (ACLS)": 8, // Added ACLS
-      "Pediatric Advanced Life Support (PALS)": 10, // Added PALS
-      "Test Payment (DELETE LATER)": 7,
-    };
-
-    const eventId = serviceMap[serviceName];
-    return eventId || 1; // Return mapped ID or default (1)
+    const eventId = getSimplybookEventIdForService(serviceName);
+    if (eventId !== undefined) return eventId;
+    throw error;
   }
 }
 
@@ -865,4 +842,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

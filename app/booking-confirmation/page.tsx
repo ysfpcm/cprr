@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowLeft, Calendar, CheckCircle, Mail } from "lucide-react"
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import { getSimplybookEventIdForService } from "../lib/services"
 
 // Create a client component that uses useSearchParams
 function BookingConfirmation() {
@@ -74,30 +75,6 @@ function BookingConfirmation() {
         // Send booking data to SimplyBook.me via our API
         try {
           console.log("Sending booking data to SimplyBook.me via API");
-          const mapServiceNameToSimplybookId = (serviceName: string): number => {
-            // Map service names to SimplyBookMe event IDs
-            const serviceMap: Record<string, number> = {
-              "BLS for Healthcare Providers (American Heart Association Compliant)": 2,
-              "CPR (Only) Certification for Non-Healthcare Personnel": 9,
-              "CPR & First Aid Certification": 3,
-              "First Aid Certification": 4,
-              "Babysitter Course (two‑day program)": 6,
-              "Advanced Cardiac Life Support (ACLS)": 8,
-              "Pediatric Advanced Life Support (PALS)": 10,
-              "Test Payment (DELETE LATER)": 7,
-            };
-
-            // Try to find a match
-            for (const [name, id] of Object.entries(serviceMap)) {
-              if (serviceName.includes(name) || name.includes(serviceName)) {
-                return id;
-              }
-            }
-            
-            // Default to 1 if no match found
-            return 1;
-          };
-
           const bookingApiResponse = await fetch("/api/bookings", {
             method: "POST",
             headers: {
@@ -116,7 +93,7 @@ function BookingConfirmation() {
               notes: `Booking confirmed via payment page.`,
               sessionId: sessionId,
               // Use simplybookEventId from the bookingData if available, otherwise map from service name
-              simplybookEventId: bookingData.simplybookEventId || mapServiceNameToSimplybookId(bookingData.service || "CPR Training")
+              simplybookEventId: bookingData.simplybookEventId || getSimplybookEventIdForService(bookingData.service || "")
             }),
           });
           
@@ -279,4 +256,3 @@ export default function BookingConfirmationPage() {
     </Suspense>
   )
 }
-
