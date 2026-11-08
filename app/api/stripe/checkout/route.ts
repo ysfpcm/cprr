@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { getServiceTotalCents, services } from '../../../lib/services'
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -53,6 +54,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
+
+    const service = services.find(item => item.name === body?.service)
+    const participantValue = body?.participants
+    const participants = typeof participantValue === 'string' && /^[1-9]\d*$/.test(participantValue)
+      ? Number(participantValue)
+      : typeof participantValue === 'number' ? participantValue : NaN
+    if (!service || !Number.isSafeInteger(participants) || participants < 1) {
+      return NextResponse.json({ error: 'Invalid service or participant count' }, { status: 400 })
+    }
+    const amount = getServiceTotalCents(service, participants)
+    if (!Number.isSafeInteger(amount)) {
+      return NextResponse.json({ error: 'Invalid booking total' }, { status: 400 })
+    }
     
     // Log the received data
     console.log('Received request body:', body)
@@ -69,10 +83,10 @@ export async function POST(request: Request) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: body.service,
-              description: `Training session on ${body.date} at ${body.time} for ${body.participants} participant(s)`,
+              name: service.name,
+              description: `Training session on ${body.date} at ${body.time} for ${participants} participant(s)`,
             },
-            unit_amount: body.amount,
+            unit_amount: amount,
           },
           quantity: 1,
         },
@@ -81,10 +95,10 @@ export async function POST(request: Request) {
       success_url: `${baseUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(body.customerEmail || '')}`,
       cancel_url: `${baseUrl}/schedule`,
       metadata: {
-        service: body.service,
+        service: service.name,
         date: body.date,
         time: body.time,
-        participants: body.participants,
+        participants: String(participants),
         customerName: body.customerName,
         customerEmail: body.customerEmail,
       },
@@ -105,4 +119,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}

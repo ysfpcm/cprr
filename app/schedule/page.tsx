@@ -8,7 +8,7 @@ import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { Check, CreditCard, Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { services } from "../lib/services"
+import { formatServicePrice, getServiceTotalCents, services } from "../lib/services"
 
 export default function SchedulePage() {
   // --- State ---
@@ -186,41 +186,6 @@ export default function SchedulePage() {
     setIsSubmitting(true)
 
     try {
-      // Calculate amount based on service and participants
-      const participants = Number.parseInt(formData.participants)
-      let amount = 0
-
-      switch (formData.service) {
-        case "cpr-first-aid":
-          amount = 13000 * participants // $130.00
-          break
-        case "first-aid":
-          amount = 9500 * participants // $95.00
-          break
-        case "bls":
-          amount = 7500 * participants // Updated Price: $75.00
-          break
-        case "cpr-non-healthcare":
-          amount = 6500 * participants // $65.00
-          break
-        case "babysitter":
-          amount = 16500 // Updated Price: $165.00 total (not per participant)
-          break
-        case "acls": // Added ACLS
-          amount = 14500 * participants // $145.00
-          break
-        case "pals": // Added PALS
-          amount = 14500 * participants // $145.00
-          break
-        case "test":
-          amount = 50 * participants // $0.50
-          break
-        default:
-          // Set a reasonable default or throw an error if service is unknown
-          console.warn(`Unknown service selected: ${formData.service}. Setting default amount.`)
-          amount = 9500 * participants // Example default
-      }
-
       // Save booking details to localStorage before redirecting
       const selectedService = services.find(s => s.id === formData.service);
 
@@ -254,8 +219,7 @@ export default function SchedulePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount,
-          service: services.find(s => s.id === formData.service)?.name || "",
+          service: selectedService?.name || "",
           date: date ? format(date, 'MMMM d, yyyy') : '',
           time: formData.time,
           participants: formData.participants,
@@ -390,7 +354,7 @@ export default function SchedulePage() {
                             <label htmlFor={service.id} className="flex-1 opacity-60">
                               <div className="flex justify-between items-center">
                                 <span className="font-semibold text-gray-500">{service.name}</span>
-                                <span className="text-sm text-gray-500 font-medium ml-2">{service.price}</span>
+                                <span className="text-sm text-gray-500 font-medium ml-2">{formatServicePrice(service)}</span>
                               </div>
                               <p className="text-sm text-gray-500 mt-1">{service.description}</p>
                             </label>
@@ -416,7 +380,7 @@ export default function SchedulePage() {
                           <label htmlFor={service.id} className="flex-1 cursor-not-allowed">
                             <div className="flex justify-between items-center">
                               <span className="font-semibold text-gray-500">{service.name}</span>
-                              <span className="text-sm text-gray-500 font-medium ml-2">{service.price}</span>
+                              <span className="text-sm text-gray-500 font-medium ml-2">{formatServicePrice(service)}</span>
                             </div>
                             <p className="text-sm text-gray-500 mt-1">{service.description}</p>
                           </label>
@@ -639,7 +603,10 @@ export default function SchedulePage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Price</p>
-                        <p className="font-medium">{services.find(s => s.id === formData.service)?.price || "$95 per person"}</p>
+                        <p className="font-medium">{(() => {
+                          const service = services.find(item => item.id === formData.service);
+                          return service ? formatServicePrice(service) : "Unknown price";
+                        })()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Date</p>
@@ -657,20 +624,9 @@ export default function SchedulePage() {
                         <p className="text-sm text-gray-500">Total</p>
                         <p className="font-medium text-red-600">
                           ${(() => {
-                            // Get the selected service details
-                            const selectedService = services.find(s => s.id === formData.service);
-                            // Extract the price string, default to '0' if not found
-                            const priceString = selectedService?.price || '0';
-                             // Remove '$' and any text after the number (like ' per person') using regex
-                            const priceValueString = priceString.replace(/[^\d.]/g, ''); // Keep only digits and decimal point
-                            // Parse the participants count, default to 1 if invalid or zero
-                            const participantsCount = Number.parseInt(formData.participants) || 1;
-                            // Parse the price per person, default to 0 if invalid
-                            const pricePerPerson = Number.parseFloat(priceValueString) || 0;
-                            // Calculate total
-                            const total = participantsCount * pricePerPerson;
-                            // Format to 2 decimal places
-                            return total.toFixed(2);
+                            const service = services.find(item => item.id === formData.service);
+                            const participants = Number(formData.participants);
+                            return service ? (getServiceTotalCents(service, participants) / 100).toFixed(2) : "0.00";
                           })()}
                         </p>
                       </div>
