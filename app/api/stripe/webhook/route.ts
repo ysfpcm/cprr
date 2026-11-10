@@ -54,7 +54,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
     
     // Get the metadata containing booking details
     const metadata = session.metadata || {}
-    const { service, date, time, participants, customerName } = metadata
+    const { service, date, time, participants, customerName, customerPhone } = metadata
     
     if (!customerEmail) {
       console.error('Customer email missing from session:', session.id)
@@ -90,7 +90,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
           body: JSON.stringify({
             clientName: customerName || 'Valued Customer',
             email: customerEmail,
-            phone: session.customer_details?.phone || '', // Try to get phone from Stripe customer details
+            phone: customerPhone || session.customer_details?.phone || '',
             service,
             participants: Number(participants) || 1,
             date: date, // Use original date from Stripe metadata instead of converting to ISO
