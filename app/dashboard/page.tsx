@@ -33,7 +33,6 @@ const ADMIN_EMAILS = ["marlx0879@gmail.com", "info@anytimecpr.com"]
 export default function DashboardPage() {
   const router = useRouter()
   const [bookings, setBookings] = useState<Booking[]>(() => getInitialBookings())
-  const [filteredBookings, setFilteredBookings] = useState<Booking[]>(() => getInitialBookings())
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all")
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
@@ -83,17 +82,14 @@ export default function DashboardPage() {
             const localBookings = getInitialBookings();
             if (localBookings.length > 0) {
               setBookings(localBookings);
-              setFilteredBookings(localBookings);
               console.log(`Using ${localBookings.length} bookings from local storage`);
             } else {
               setBookings([]);
-              setFilteredBookings([]);
               console.log('No bookings found in API or local storage');
             }
           } else {
             // Use bookings from API
             setBookings(data.bookings);
-            setFilteredBookings(data.bookings);
             console.log(`Loaded ${data.bookings.length} bookings from API`);
           }
         }
@@ -102,7 +98,6 @@ export default function DashboardPage() {
         // Fallback to local bookings if API fails
         const localBookings = getInitialBookings();
         setBookings(localBookings);
-        setFilteredBookings(localBookings);
         console.log(`Fallback: Using ${localBookings.length} bookings from local storage due to API error`);
       }
     };
@@ -115,35 +110,20 @@ export default function DashboardPage() {
   // Filter bookings based on search term and status
   const handleSearch = (term: string) => {
     setSearchTerm(term)
-    filterBookings(term, statusFilter)
   }
 
   const handleStatusFilter = (status: FilterStatus) => {
     setStatusFilter(status)
-    filterBookings(searchTerm, status)
   }
 
-  const filterBookings = (term: string, status: FilterStatus) => {
-    let filtered: Booking[] = bookings
-
-    // Filter by search term
-    if (term) {
-      const lowercaseTerm = term.toLowerCase()
-      filtered = filtered.filter(
-        (booking) =>
-          booking.clientName.toLowerCase().includes(lowercaseTerm) ||
-          booking.email.toLowerCase().includes(lowercaseTerm) ||
-          booking.service.toLowerCase().includes(lowercaseTerm),
-      )
-    }
-
-    // Filter by status
-    if (status !== "all") {
-      filtered = filtered.filter((booking) => booking.status === status)
-    }
-
-    setFilteredBookings(filtered)
-  }
+  const lowercaseTerm = searchTerm.toLowerCase()
+  const filteredBookings = bookings.filter((booking) =>
+    (statusFilter === "all" || booking.status === statusFilter) &&
+    (!lowercaseTerm ||
+      booking.clientName.toLowerCase().includes(lowercaseTerm) ||
+      booking.email.toLowerCase().includes(lowercaseTerm) ||
+      booking.service.toLowerCase().includes(lowercaseTerm)),
+  )
 
   // Handle booking actions
   const handleReschedule = (booking: Booking) => {
@@ -169,14 +149,6 @@ export default function DashboardPage() {
     })
 
     setBookings(updatedBookings)
-    setFilteredBookings(updatedBookings.filter(b => {
-        const termMatch = !searchTerm ||
-            b.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.service.toLowerCase().includes(searchTerm.toLowerCase());
-        const statusMatch = statusFilter === 'all' || b.status === statusFilter;
-        return termMatch && statusMatch;
-    }))
     setIsRescheduling(false)
     setSelectedBooking(null)
     setNewDate(null)
@@ -222,9 +194,6 @@ export default function DashboardPage() {
         b.id === bookingId ? { ...b, status } : b
       );
       setBookings(updatedBookings);
-
-      // Re-apply filters to the updated list
-      filterBookings(searchTerm, statusFilter); // Use the existing filter function
 
       return true; // Indicate success
 
@@ -584,4 +553,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
