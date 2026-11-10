@@ -101,6 +101,7 @@ export async function POST(request: Request) {
         participants: String(participants),
         customerName: body.customerName,
         customerEmail: body.customerEmail,
+        customerPhone: typeof body.phone === 'string' ? body.phone : '',
       },
     })
 
