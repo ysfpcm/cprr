@@ -10,7 +10,7 @@ function loadModule(file, context) {
   return new vm.SourceTextModule(stripTypeScriptTypes(source), { context, identifier: file });
 }
 
-async function createRoutes() {
+async function createRoutes(bookingResult = async () => Response.json({ success: true })) {
   let checkoutSession;
   let booking;
   const context = vm.createContext({
@@ -24,7 +24,7 @@ async function createRoutes() {
     URL,
     fetch: async (_url, options) => {
       booking = JSON.parse(options.body);
-      return Response.json({ success: true });
+      return bookingResult();
     },
   });
   class Stripe {
@@ -61,13 +61,17 @@ async function createRoutes() {
 }
 
 async function deliverWebhook(routes, session) {
-  const response = await routes.webhook.POST(new Request('http://localhost/api/stripe/webhook', {
+  const response = await postWebhook(routes, session);
+  assert.equal(response.status, 200);
+  return routes.getBooking();
+}
+
+async function postWebhook(routes, session) {
+  return routes.webhook.POST(new Request('http://localhost/api/stripe/webhook', {
     method: 'POST',
     headers: { 'stripe-signature': 'test-signature' },
     body: JSON.stringify({ type: 'checkout.session.completed', data: { object: session } }),
   }));
-  assert.equal(response.status, 200);
-  return routes.getBooking();
 }
 
 test('checkout phone reaches the webhook booking without Stripe phone collection', async () => {
@@ -123,4 +127,46 @@ test('webhook prefers the booking phone and tolerates missing phone details', as
     metadata: {},
   });
   assert.equal(missingPhoneBooking.phone, '');
+});
+
+test('webhook reports booking failures so delivery can be retried', async (t) => {
+  const scenarios = [
+    ['HTTP error', async () => Response.json({ error: 'unavailable' }, { status: 500 })],
+    ['unsaved booking', async () => Response.json({ success: false })],
+    ['invalid response', async () => new Response('not JSON')],
+    ['network error', async () => { throw new Error('connection failed'); }],
+  ];
+  for (const [name, bookingResult] of scenarios) {
+    await t.test(name, async () => {
+      const routes = await createRoutes(bookingResult);
+      const response = await postWebhook(routes, {
+        id: 'cs_test',
+        customer_email: 'customer@example.com',
+        metadata: {},
+      });
+      assert.equal(response.status, 500);
+    });
+  }
+});
+
+test('webhook reports missing customer email as a processing failure', async () => {
+  const routes = await createRoutes();
+  const response = await postWebhook(routes, { id: 'cs_test', metadata: {} });
+  assert.equal(response.status, 500);
+  assert.equal(routes.getBooking(), undefined);
+});
+
+test('a failed delivery succeeds when the booking API recovers', async () => {
+  let attempts = 0;
+  const routes = await createRoutes(async () => {
+    attempts += 1;
+    return attempts === 1
+      ? Response.json({ error: 'unavailable' }, { status: 503 })
+      : Response.json({ success: true });
+  });
+  const session = { id: 'cs_retry', customer_email: 'customer@example.com', metadata: {} };
+  assert.equal((await postWebhook(routes, session)).status, 500);
+  assert.equal((await postWebhook(routes, session)).status, 200);
+  assert.equal(attempts, 2);
+  assert.equal(routes.getBooking().sessionId, session.id);
 });

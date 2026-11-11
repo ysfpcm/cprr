@@ -20,9 +20,9 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Offline checkout regression test
+## Offline checkout and webhook regression test
 
-With Node.js 24, run `node --experimental-vm-modules scripts/test-checkout-phone.js` to check that checkout phone numbers reach webhook bookings. The test uses mocked Stripe and booking APIs and does not contact external services.
+With Node.js 24, run `node --experimental-vm-modules scripts/test-checkout-phone.js` to check that checkout phone numbers reach webhook bookings and failed booking saves return a retryable error. The test uses mocked Stripe and booking APIs and does not contact external services.
 
 ## Learn More
 

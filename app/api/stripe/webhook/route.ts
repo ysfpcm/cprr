@@ -61,75 +61,43 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
       return false
     }
     
-    // Log detailed information about email request
-    console.log('Preparing to send confirmation email to:', customerEmail, {
-      name: customerName || 'Valued Customer',
-      service,
-      date,
-      time,
-      participants
-    })
-    
-    // Send confirmation email - ensure we use a full URL
     const baseUrl = getBaseUrl(request);
-    
-    const emailUrl = `${baseUrl}/api/email`
-    console.log('Sending email request to:', emailUrl)
-    
-    try {
-      // Save booking data internally and trigger Simplybook.me integration
-      const bookingApiUrl = `${baseUrl}/api/bookings`
-      console.log('Calling booking API endpoint:', bookingApiUrl)
-      
-      try {
-        const bookingResponse = await fetch(bookingApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            clientName: customerName || 'Valued Customer',
-            email: customerEmail,
-            phone: customerPhone || session.customer_details?.phone || '',
-            service,
-            participants: Number(participants) || 1,
-            date: date, // Use original date from Stripe metadata instead of converting to ISO
-            time,
-            status: 'upcoming',
-            notes: `Booking from Stripe checkout.`,
-            sessionId: session.id,
-            simplybookEventId: service ? getSimplybookEventIdForService(service) : undefined
-          }),
-        })
-        
-        console.log('Booking save response status:', bookingResponse.status)
-        
-        if (!bookingResponse.ok) {
-          console.error('Failed to save booking data for dashboard:', await bookingResponse.text())
-        } else {
-          console.log('Booking data saved successfully for dashboard')
-          console.log('Note: Email sending via SendGrid has been disabled - SimplyBookMe will handle confirmation emails')
-        }
-      } catch (bookingError) {
-        console.error('Error saving booking data:', bookingError)
-      }
-      
-      // Return detailed success response with booking information
-      return NextResponse.json({ 
-        received: true, 
-        message: 'Booking processed successfully', 
-        bookingInfo: {
-          email: customerEmail,
-          service,
-          date,
-          time,
-          participants
-        }
-      })
-    } catch (error) {
-      console.error('Error processing checkout completion:', error)
-      return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
+    const bookingApiUrl = `${baseUrl}/api/bookings`
+    console.log('Calling booking API endpoint:', bookingApiUrl)
+
+    const bookingResponse = await fetch(bookingApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clientName: customerName || 'Valued Customer',
+        email: customerEmail,
+        phone: customerPhone || session.customer_details?.phone || '',
+        service,
+        participants: Number(participants) || 1,
+        date,
+        time,
+        status: 'upcoming',
+        notes: `Booking from Stripe checkout.`,
+        sessionId: session.id,
+        simplybookEventId: service ? getSimplybookEventIdForService(service) : undefined
+      }),
+    })
+
+    if (!bookingResponse.ok) {
+      console.error('Failed to save booking data for dashboard:', await bookingResponse.text())
+      return false
     }
+
+    const result = await bookingResponse.json()
+    if (result?.success !== true) {
+      console.error('Booking API did not confirm a saved booking:', session.id)
+      return false
+    }
+
+    console.log('Booking data saved successfully for dashboard')
+    return true
   } catch (error) {
     console.error('Error processing checkout session:', error)
     return false
@@ -213,6 +181,7 @@ export async function POST(request: Request) {
       
       if (!success) {
         console.warn('Failed to process checkout session completely:', session.id)
+        return NextResponse.json({ error: 'Failed to process checkout session' }, { status: 500 })
       }
     }
     
