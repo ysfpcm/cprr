@@ -50,7 +50,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
     console.log('Processing successful checkout session:', session.id)
     
     // Get customer email from the session
-    const customerEmail = session.customer_email
+    const customerEmail = session.customer_details?.email || session.customer_email
     
     // Get the metadata containing booking details
     const metadata = session.metadata || {}
