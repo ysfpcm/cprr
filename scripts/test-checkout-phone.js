@@ -149,6 +149,28 @@ test('webhook reports booking failures so delivery can be retried', async (t) =>
   }
 });
 
+test('webhook uses the email collected during checkout', async () => {
+  const routes = await createRoutes();
+  const booking = await deliverWebhook(routes, {
+    id: 'cs_collected_email',
+    customer_email: null,
+    customer_details: { email: 'collected@example.com' },
+    metadata: {},
+  });
+  assert.equal(booking.email, 'collected@example.com');
+});
+
+test('webhook prefers the final checkout email to a prefilled email', async () => {
+  const routes = await createRoutes();
+  const booking = await deliverWebhook(routes, {
+    id: 'cs_changed_email',
+    customer_email: 'prefilled@example.com',
+    customer_details: { email: 'changed@example.com' },
+    metadata: {},
+  });
+  assert.equal(booking.email, 'changed@example.com');
+});
+
 test('webhook reports missing customer email as a processing failure', async () => {
   const routes = await createRoutes();
   const response = await postWebhook(routes, { id: 'cs_test', metadata: {} });
