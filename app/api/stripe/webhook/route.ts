@@ -55,6 +55,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
     // Get the metadata containing booking details
     const metadata = session.metadata || {}
     const { service, date, time, participants, customerName, customerPhone } = metadata
+    const unitId = /^[1-9]\d*$/.test(metadata.unitId || '') ? Number(metadata.unitId) : NaN
     
     if (!customerEmail) {
       console.error('Customer email missing from session:', session.id)
@@ -81,6 +82,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
         status: 'upcoming',
         notes: `Booking from Stripe checkout.`,
         sessionId: session.id,
+        unitId: Number.isSafeInteger(unitId) ? unitId : undefined,
         simplybookEventId: service ? getSimplybookEventIdForService(service) : undefined
       }),
     })
