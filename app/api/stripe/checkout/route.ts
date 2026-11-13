@@ -63,6 +63,13 @@ export async function POST(request: Request) {
     if (!service || !Number.isSafeInteger(participants) || participants < 1) {
       return NextResponse.json({ error: 'Invalid service or participant count' }, { status: 400 })
     }
+    const unitValue = body?.unitId
+    const unitId = typeof unitValue === 'string' && /^[1-9]\d*$/.test(unitValue)
+      ? Number(unitValue)
+      : typeof unitValue === 'number' ? unitValue : NaN
+    if (unitValue != null && (!Number.isSafeInteger(unitId) || unitId < 1)) {
+      return NextResponse.json({ error: 'Invalid instructor ID' }, { status: 400 })
+    }
     const amount = getServiceTotalCents(service, participants)
     if (!Number.isSafeInteger(amount)) {
       return NextResponse.json({ error: 'Invalid booking total' }, { status: 400 })
@@ -102,6 +109,7 @@ export async function POST(request: Request) {
         customerName: body.customerName,
         customerEmail: body.customerEmail,
         customerPhone: typeof body.phone === 'string' ? body.phone : '',
+        ...(unitValue != null ? { unitId: String(unitId) } : {}),
       },
     })
 
