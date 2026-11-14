@@ -22,7 +22,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Offline checkout and webhook regression test
 
-With Node.js 24, run `node --experimental-vm-modules scripts/test-checkout-phone.js` to check that checkout phone numbers and instructor IDs reach webhook bookings and failed booking saves return a retryable error. The test uses mocked Stripe and SimplyBook APIs and does not contact external services.
+With Node.js 24, run `node --experimental-vm-modules scripts/test-checkout-phone.js` to check checkout date and time validation, that phone numbers and instructor IDs reach webhook bookings, and that failed booking saves return a retryable error. The test uses mocked Stripe and SimplyBook APIs and does not contact external services.
 
 ## Learn More
 

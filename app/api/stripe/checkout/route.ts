@@ -63,6 +63,11 @@ export async function POST(request: Request) {
     if (!service || !Number.isSafeInteger(participants) || participants < 1) {
       return NextResponse.json({ error: 'Invalid service or participant count' }, { status: 400 })
     }
+    const date = typeof body?.date === 'string' ? body.date.trim() : ''
+    const time = typeof body?.time === 'string' ? body.time.trim() : ''
+    if (!date || !time) {
+      return NextResponse.json({ error: 'Booking date and time are required' }, { status: 400 })
+    }
     const unitValue = body?.unitId
     const unitId = typeof unitValue === 'string' && /^[1-9]\d*$/.test(unitValue)
       ? Number(unitValue)
@@ -91,7 +96,7 @@ export async function POST(request: Request) {
             currency: 'usd',
             product_data: {
               name: service.name,
-              description: `Training session on ${body.date} at ${body.time} for ${participants} participant(s)`,
+              description: `Training session on ${date} at ${time} for ${participants} participant(s)`,
             },
             unit_amount: amount,
           },
@@ -103,8 +108,8 @@ export async function POST(request: Request) {
       cancel_url: `${baseUrl}/schedule`,
       metadata: {
         service: service.name,
-        date: body.date,
-        time: body.time,
+        date,
+        time,
         participants: String(participants),
         customerName: body.customerName,
         customerEmail: body.customerEmail,
