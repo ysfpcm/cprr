@@ -208,10 +208,45 @@ test('checkout rejects invalid instructor IDs', async () => {
   for (const unitId of [0, -1, 1.5, '3invalid', '9007199254740992']) {
     const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
       method: 'POST',
-      body: JSON.stringify({ service: routes.services.services[0].name, participants: 1, unitId }),
+      body: JSON.stringify({ service: routes.services.services[0].name, participants: 1,
+        date: '2026-11-20', time: '2:00 PM', unitId }),
     }));
     assert.equal(response.status, 400);
   }
+});
+
+test('checkout rejects missing or invalid booking dates and times before creating a session', async () => {
+  for (const field of ['date', 'time']) {
+    for (const value of [undefined, null, '', '   ', 42, {}]) {
+      const routes = await createRoutes();
+      const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
+        method: 'POST',
+        body: JSON.stringify({ service: routes.services.services[0].name, participants: 1,
+          date: '2026-11-20', time: '2:00 PM', [field]: value }),
+      }));
+      assert.equal(response.status, 400, `${field}: ${JSON.stringify(value)}`);
+      assert.equal((await response.json()).error, 'Booking date and time are required');
+      assert.equal(routes.getCheckout(), undefined);
+    }
+  }
+});
+
+test('checkout trims booking dates and times before passing them to the webhook', async () => {
+  const routes = await createRoutes();
+  const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ service: routes.services.services[0].name, participants: 1,
+      date: ' 2026-11-20 ', time: ' 2:00 PM ', customerEmail: 'customer@example.com' }),
+  }));
+  assert.equal(response.status, 200);
+  const checkout = routes.getCheckout();
+  assert.equal(checkout.line_items[0].price_data.product_data.description,
+    'Training session on 2026-11-20 at 2:00 PM for 1 participant(s)');
+  const booking = await deliverWebhook(routes, {
+    id: 'cs_trimmed', customer_email: checkout.customer_email, metadata: checkout.metadata,
+  });
+  assert.equal(booking.date, '2026-11-20');
+  assert.equal(booking.time, '2:00 PM');
 });
 
 test('webhook retains Stripe phone fallback for older sessions', async () => {
