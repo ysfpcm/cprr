@@ -6,6 +6,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle, Star } from "lucide-react"
+import { buildWaitlistEmail } from "../lib/waitlist"
 
 export default function WaitlistPage() {
   const [formData, setFormData] = useState({
@@ -14,10 +15,8 @@ export default function WaitlistPage() {
     phone: "",
     interest: "both", // Default to both ACLS and PALS
     experience: "",
-    notification: true,
+    notification: false,
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement
@@ -29,29 +28,7 @@ export default function WaitlistPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Waitlist form submitted:", formData)
-      setIsSubmitting(false)
-      setSubmitSuccess(true)
-
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        interest: "both",
-        experience: "",
-        notification: true,
-      })
-
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSubmitSuccess(false)
-      }, 5000)
-    }, 1000)
+    window.location.href = buildWaitlistEmail(formData)
   }
 
   return (
@@ -70,10 +47,10 @@ export default function WaitlistPage() {
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-white">
-                Join Our Waitlist
+                Ask About Class Updates
               </h1>
               <p className="mx-auto max-w-[700px] text-white md:text-xl">
-                Be the first to know when our ACLS and PALS classes become available
+                Contact us about our ACLS and PALS classes
               </p>
             </div>
           </motion.div>
@@ -156,6 +133,10 @@ export default function WaitlistPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
+              <p className="text-sm text-gray-600">
+                This form opens an email draft; review and send it in your email app to contact us.
+                If you don&apos;t have an email app, use our <Link href="/contact" className="text-blue-700 underline">contact information</Link> instead.
+              </p>
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
                   Full Name
@@ -239,29 +220,15 @@ export default function WaitlistPage() {
                   className="h-4 w-4 mt-1 rounded border-gray-300 text-hospitality-600 focus:ring-hospitality-500"
                 />
                 <label htmlFor="notification" className="text-sm text-gray-500">
-                  I agree to receive email notifications when these classes become available and other updates from
-                  Anytime CPR.
+                  Please email me when these classes become available.
                 </label>
               </div>
               <button
                 type="submit"
                 className="w-full inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 disabled:opacity-50"
-                disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Join Waitlist"}
+                Open Email Draft
               </button>
-
-              {submitSuccess && (
-                <motion.div
-                  className="p-4 rounded-md bg-green-50 text-green-700 border border-green-200"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  Thank you for joining our waitlist! We&apos;ll notify you as soon as our ACLS and PALS classes are
-                  available.
-                </motion.div>
-              )}
 
               <div className="text-center mt-6">
                 <Link
@@ -279,4 +246,3 @@ export default function WaitlistPage() {
     </div>
   )
 }
-
