@@ -59,14 +59,13 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-white">Coming Soon: ACLS and PALS Classes</h2>
             <p className="text-white/90 max-w-[700px]">
               We&apos;re expanding our offerings to include Advanced Cardiovascular Life Support (ACLS) and Pediatric
-              Advanced Life Support (PALS) certifications. Join our waitlist to be notified when these classes become
-              available.
+              Advanced Life Support (PALS) certifications. Contact us to ask about class updates.
             </p>
             <Link
               href="/waitlist"
               className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-white px-6 text-sm font-medium text-hospitality-600 shadow transition-colors hover:bg-gray-100"
             >
-              Join Waitlist
+              Ask About Classes
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </motion.div>
@@ -244,4 +243,3 @@ export default function Home() {
     </div>
   )
 }
-
