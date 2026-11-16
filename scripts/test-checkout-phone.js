@@ -125,8 +125,7 @@ test('checkout preserves the selected instructor for the webhook booking', async
   assert.equal(booking.unitId, 3);
 });
 
-test('webhook booking sends the selected instructor to SimplyBook', async () => {
-  let bookRequest;
+async function createBookingsRoute(book = async () => Response.json({ result: { id: 'booking-1' } })) {
   const context = vm.createContext({
     process: { env: { SIMPLYBOOK_API_KEY: 'test-key', SIMPLYBOOK_COMPANY_LOGIN: 'test-company' } },
     console: { log() {}, warn() {}, error() {} },
@@ -137,10 +136,9 @@ test('webhook booking sends the selected instructor to SimplyBook', async () => 
         getUnitList: { 2: { name: 'Other instructor' }, 3: { name: 'Selected instructor' } },
         getEvent: { unit_map: [2, 3] },
         getStartTimeMatrix: { '2026-11-20': ['14:00:00'] },
-        book: { id: 'booking-1' },
       };
+      if (request.method === 'book') return book(request);
       if (!(request.method in results)) throw new Error(`Unexpected method: ${request.method}`);
-      if (request.method === 'book') bookRequest = request;
       return Response.json({ result: results[request.method] });
     },
   });
@@ -166,10 +164,19 @@ test('webhook booking sends the selected instructor to SimplyBook', async () => 
     return dependencies[name];
   });
   await bookings.evaluate();
-  const routes = await createRoutes((booking) => bookings.namespace.POST(new Request('http://localhost/api/bookings', {
+  return { post: (booking) => bookings.namespace.POST(new Request('http://localhost/api/bookings', {
     method: 'POST',
     body: JSON.stringify(booking),
-  })));
+  })), context };
+}
+
+test('webhook booking sends the selected instructor to SimplyBook', async () => {
+  let bookRequest;
+  const bookings = await createBookingsRoute(async (request) => {
+    bookRequest = request;
+    return Response.json({ result: { id: 'booking-1' } });
+  });
+  const routes = await createRoutes(bookings.post);
   const checkoutResponse = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
     method: 'POST',
     body: JSON.stringify({
@@ -189,6 +196,48 @@ test('webhook booking sends the selected instructor to SimplyBook', async () => 
     metadata: checkout.metadata,
   });
   assert.equal(bookRequest.params[1], 3);
+});
+
+test('SimplyBook failures produce retryable webhook errors despite an internal save', async (t) => {
+  const failures = [
+    ['JSON-RPC error', async () => Response.json({ error: { message: 'Service unavailable' } })],
+    ['HTTP error', async () => Response.json({ error: { message: 'Service unavailable' } }, { status: 503 })],
+    ['HTTP error with result', async () => Response.json({ result: { id: 'booking-1' } }, { status: 503 })],
+    ['network error', async () => { throw new Error('connection failed'); }],
+    ['invalid response', async () => new Response('not JSON')],
+    ['missing result', async () => Response.json({})],
+  ];
+  for (const [name, failure] of failures) {
+    await t.test(name, async () => {
+      let attempts = 0;
+      const bookings = await createBookingsRoute(async (request) => {
+        attempts += 1;
+        return attempts === 1 ? failure(request) : Response.json({ result: { id: 'booking-1' } });
+      });
+      const routes = await createRoutes(bookings.post);
+      const session = {
+        id: 'cs_sync_retry', customer_email: 'customer@example.com',
+        metadata: { service: routes.services.services[0].name, date: '2026-11-20', time: '2:00 PM', unitId: '3' },
+      };
+      assert.equal((await postWebhook(routes, session)).status, 500);
+      assert.equal(bookings.context.bookings.length, 1);
+      assert.equal((await postWebhook(routes, session)).status, 200);
+      assert.equal(bookings.context.bookings.length, 1);
+      assert.equal(attempts, 2);
+    });
+  }
+});
+
+test('booking API does not confirm an unsynced internal booking', async () => {
+  const bookings = await createBookingsRoute(async () => Response.json({ error: { message: 'Service unavailable' } }));
+  const response = await bookings.post({
+    email: 'customer@example.com', service: 'Test Payment', simplybookEventId: 8,
+    date: '2026-11-20', time: '2:00 PM', sessionId: 'cs_unsynced',
+  });
+  assert.equal(response.status, 500);
+  const result = await response.json();
+  assert.equal(result.success, false);
+  assert.equal(result.bookingDetails.sessionId, 'cs_unsynced');
 });
 
 test('webhook ignores missing or invalid instructor IDs in older sessions', async () => {
