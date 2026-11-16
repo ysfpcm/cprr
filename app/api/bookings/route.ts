@@ -432,6 +432,7 @@ async function checkTimeSlotAvailability(
 export async function POST(request: Request) {
   let savedBooking: Booking | null = null; // Define here to be accessible in catch/finally if needed
   let simplybookResult: SimplybookResponse | null = null; // To store simplybook response
+  let simplybookSucceeded = false;
 
   try {
     const bookingData = await request.json();
@@ -728,7 +729,8 @@ export async function POST(request: Request) {
           // Optionally: Decide if internal save should proceed despite SimplyBook failure
           // For now, we will continue to internal save but the message will reflect the issue
         } else {
-           console.log("Successfully created booking on SimplyBook.me:", simplybookResult?.result);
+           simplybookSucceeded = !!simplybookResult?.result;
+           console.log("SimplyBook.me booking result:", simplybookResult?.result);
         }
 
     } catch (simplybookError) {
@@ -804,8 +806,10 @@ export async function POST(request: Request) {
     let message = "Booking processed and saved internally.";
     const suggestions = bookingData.suggestedAlternatives || [];
     
-    if (simplybookResult && simplybookResult.result) {
+    if (simplybookSucceeded && savedBooking) {
          message = "Booking successful on SimplyBook.me and saved internally.";
+    } else if (simplybookSucceeded) {
+         message = "Booking successful on SimplyBook.me, but could not be saved internally.";
     } else if (simplybookResult && simplybookResult.error) {
          if (simplybookResult.error.message === 'Selected event id is not available') {
            message = "Booking saved internally, but the selected service is not available for the chosen date and time on SimplyBook.me. Your appointment will be reviewed by our team.";
@@ -822,13 +826,14 @@ export async function POST(request: Request) {
     }
 
     // Respond to the client (Stripe Webhook)
+    const success = !!savedBooking && simplybookSucceeded;
     return NextResponse.json({
-      success: !!savedBooking, // Success based on internal save for now
+      success,
       message: message,
       bookingDetails: savedBooking, // Include saved booking details in response
       simplybookResponse: simplybookResult, // Include the raw simplybook response for debugging
       alternativeTimes: suggestions.length > 0 ? suggestions : undefined // Include suggested alternatives if available
-    });
+    }, { status: success ? 200 : 500 });
 
   } catch (error) {
     console.error('Error in POST /api/bookings:', error);
