@@ -198,6 +198,33 @@ test('webhook booking sends the selected instructor to SimplyBook', async () => 
   assert.equal(bookRequest.params[1], 3);
 });
 
+test('booking preserves international phone prefixes while formatting US numbers', async (t) => {
+  const scenarios = [
+    ['international number with ten digits', '+43 1 234 5678', '+4312345678'],
+    ['international number with leading whitespace', '  +43 1 234 5678  ', '+4312345678'],
+    ['US number', '(713) 555-0123', '+17135550123'],
+    ['US number with country code', '+1 (713) 555-0123', '+17135550123'],
+    ['missing number', '', '+15555555555'],
+  ];
+  for (const [name, phone, expected] of scenarios) {
+    await t.test(name, async () => {
+      let bookRequest;
+      const bookings = await createBookingsRoute(async (request) => {
+        bookRequest = request;
+        return Response.json({ result: { id: 'booking-1' } });
+      });
+      const response = await bookings.post({
+        clientName: 'Test Customer', email: 'customer@example.com', phone,
+        service: 'BLS Certification', simplybookEventId: 1, unitId: 3,
+        date: '2026-11-20', time: '2:00 PM', sessionId: 'cs_phone',
+      });
+      assert.equal(response.status, 200);
+      assert.equal(bookRequest.params[4].phone, expected);
+      assert.equal((await response.json()).bookingDetails.phone, expected);
+    });
+  }
+});
+
 test('SimplyBook failures produce retryable webhook errors despite an internal save', async (t) => {
   const failures = [
     ['JSON-RPC error', async () => Response.json({ error: { message: 'Service unavailable' } })],
