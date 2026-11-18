@@ -122,8 +122,9 @@ function formatPhoneNumber(phoneString: string): string { // Return string place
   }
 
   // SimplyBook.me seems to expect a standardized format with country code
-  // If the cleaned number doesn't start with +, assume US/CA and add +1
-  if (digitsOnly.startsWith('1') && digitsOnly.length === 11) {
+  if (phoneString.trim().startsWith('+')) {
+      return `+${digitsOnly}`;
+  } else if (digitsOnly.startsWith('1') && digitsOnly.length === 11) {
       // Already has US country code, ensure + is present
       console.log(`Formatted phone from "${phoneString}" to "+${digitsOnly}" (added +)`);
       return `+${digitsOnly}`;
@@ -131,10 +132,6 @@ function formatPhoneNumber(phoneString: string): string { // Return string place
       // Standard 10-digit US/CA number, add +1
       console.log(`Formatted phone from "${phoneString}" to "+1${digitsOnly}" (added +1)`);
       return `+1${digitsOnly}`;
-  } else if (digitsOnly.startsWith('+')) {
-      // Already starts with +, assume it's correct international format
-      console.log(`Formatted phone from "${phoneString}" to "${digitsOnly}" (already international)`);
-      return digitsOnly; // Return as is, assuming + signifies correct format
   } else {
       // For other lengths or formats not explicitly handled, prepend + but log warning
       console.warn(`Phone "${phoneString}" has unexpected length (${digitsOnly.length}). Prepending '+' as fallback: +${digitsOnly}`);
