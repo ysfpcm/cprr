@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, phone, message } = body
+    const { name, email, message } = body
 
     // Validate required fields
     if (!name || !email || !message) {
@@ -13,21 +13,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Log the contact form submission
-    console.log('Contact form submission received:')
-    console.log(`Name: ${name}`)
-    console.log(`Email: ${email}`)
-    console.log(`Phone: ${phone || 'Not provided'}`)
-    console.log(`Message: ${message}`)
-    console.log('Note: Email notifications via SendGrid have been disabled')
-
-    // Return success response
     return NextResponse.json(
-      { 
-        message: 'Contact form submitted successfully. Our team will review your message and contact you directly.',
-        note: 'Email sending via SendGrid has been disabled. Please make sure your provided contact information is correct.'
-      },
-      { status: 200 }
+      { error: 'Contact form delivery is unavailable. Please email info@anytimecprhealthservices.com directly; your message has not been sent.' },
+      { status: 503 }
     )
   } catch (error) {
     console.error('Contact form error:', error)
@@ -39,4 +27,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}
