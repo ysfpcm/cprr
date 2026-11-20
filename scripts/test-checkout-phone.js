@@ -307,6 +307,55 @@ test('checkout rejects missing or invalid booking dates and times before creatin
   }
 });
 
+test('checkout rejects malformed calendar dates and times before creating a session', async () => {
+  const invalidBookings = [
+    { date: 'not a date', time: '2:00 PM' },
+    { date: '2026-02-29', time: '2:00 PM' },
+    { date: '1900-02-29', time: '2:00 PM' },
+    { date: 'April 31, 2026', time: '2:00 PM' },
+    { date: '2026-13-01', time: '2:00 PM' },
+    { date: '2026-01-00', time: '2:00 PM' },
+    { date: '2026-11-20', time: 'not a time' },
+    { date: '2026-11-20', time: '0:00 AM' },
+    { date: '2026-11-20', time: '13:00 PM' },
+    { date: '2026-11-20', time: '2:60 PM' },
+    { date: '2026-11-20', time: '24:00:00' },
+    { date: '2026-11-20', time: '23:59:60' },
+    { date: '2026-11-20', time: '2:00:30' },
+    { date: '2026-11-20', time: '2:00 PM extra' },
+  ];
+  for (const booking of invalidBookings) {
+    const routes = await createRoutes();
+    const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ service: routes.services.services[0].name, participants: 1, ...booking }),
+    }));
+    assert.equal(response.status, 400, JSON.stringify(booking));
+    assert.equal((await response.json()).error, 'Invalid booking date or time');
+    assert.equal(routes.getCheckout(), undefined);
+  }
+});
+
+test('checkout accepts valid calendar dates and supported time formats', async () => {
+  const validBookings = [
+    { date: 'February 29, 2028', time: '12:00 AM' },
+    { date: '2000-02-29', time: '00:00:00' },
+    { date: '2028-02-29', time: '12:00 PM' },
+    { date: '2026-11-20', time: '23:59' },
+    { date: '2026-11-20', time: '23:59:59' },
+  ];
+  for (const booking of validBookings) {
+    const routes = await createRoutes();
+    const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ service: routes.services.services[0].name, participants: 1, ...booking }),
+    }));
+    assert.equal(response.status, 200, JSON.stringify(booking));
+    assert.equal(routes.getCheckout().metadata.date, booking.date);
+    assert.equal(routes.getCheckout().metadata.time, booking.time);
+  }
+});
+
 test('checkout trims booking dates and times before passing them to the webhook', async () => {
   const routes = await createRoutes();
   const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {

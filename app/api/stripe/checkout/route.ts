@@ -7,6 +7,35 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
 })
 
+function isValidBookingDate(date: string): boolean {
+  const months = ['january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december']
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  const named = /^([a-z]+)\s+(\d{1,2}),\s+(\d{4})$/i.exec(date)
+  if (!iso && !named) return false
+
+  const year = Number(iso ? iso[1] : named![3])
+  const month = iso ? Number(iso[2]) : months.indexOf(named![1].toLowerCase()) + 1
+  const day = Number(iso ? iso[3] : named![2])
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false
+
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  return day <= daysInMonth[month - 1]
+}
+
+function isValidBookingTime(time: string): boolean {
+  const twelveHour = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(time)
+  if (twelveHour) {
+    const hours = Number(twelveHour[1])
+    return hours >= 1 && hours <= 12 && Number(twelveHour[2]) < 60
+  }
+
+  const twentyFourHour = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(time)
+  return !!twentyFourHour && Number(twentyFourHour[1]) < 24 && Number(twentyFourHour[2]) < 60 &&
+    (!twentyFourHour[3] || (twentyFourHour[1].length === 2 && Number(twentyFourHour[3]) < 60))
+}
+
 // Helper function to get the base URL, ensuring it works in production
 function getBaseUrl(request: Request): string {
   // Try to get from environment variable first (most reliable option)
@@ -67,6 +96,9 @@ export async function POST(request: Request) {
     const time = typeof body?.time === 'string' ? body.time.trim() : ''
     if (!date || !time) {
       return NextResponse.json({ error: 'Booking date and time are required' }, { status: 400 })
+    }
+    if (!isValidBookingDate(date) || !isValidBookingTime(time)) {
+      return NextResponse.json({ error: 'Invalid booking date or time' }, { status: 400 })
     }
     const unitValue = body?.unitId
     const unitId = typeof unitValue === 'string' && /^[1-9]\d*$/.test(unitValue)
