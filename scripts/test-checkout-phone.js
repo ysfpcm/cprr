@@ -74,8 +74,18 @@ async function postWebhook(routes, session) {
   }));
 }
 
+test('checkout return page does not submit a second booking or claim confirmation', () => {
+  const confirmation = fs.readFileSync(path.join(__dirname, '../app/booking-confirmation/page.tsx'), 'utf8');
+  const schedule = fs.readFileSync(path.join(__dirname, '../app/schedule/page.tsx'), 'utf8');
+  assert.doesNotMatch(confirmation, /fetch\s*\(\s*['"]\/api\/bookings/);
+  assert.doesNotMatch(confirmation, /Booking Confirmed|Your Training is Scheduled/);
+  assert.match(confirmation, /contact us to confirm/i);
+  assert.doesNotMatch(schedule, /pendingBooking/);
+});
+
 test('checkout phone reaches the webhook booking without Stripe phone collection', async () => {
-  const routes = await createRoutes();
+  let bookingCalls = 0;
+  const routes = await createRoutes(async () => { bookingCalls++; return Response.json({ success: true }); });
   const phone = '(713) 555-0123';
   const response = await routes.checkout.POST(new Request('http://localhost/api/stripe/checkout', {
     method: 'POST',
@@ -98,6 +108,7 @@ test('checkout phone reaches the webhook booking without Stripe phone collection
     metadata: checkout.metadata,
   });
   assert.equal(booking.phone, phone);
+  assert.equal(bookingCalls, 1);
 });
 
 test('checkout preserves the selected instructor for the webhook booking', async () => {

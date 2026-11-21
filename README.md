@@ -24,6 +24,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 With Node.js 24, run `node --experimental-vm-modules scripts/test-checkout-phone.js` to check checkout date and time validation, that phone numbers and instructor IDs reach webhook bookings, and that failed booking saves and SimplyBook syncs return a retryable error. The test uses mocked Stripe and SimplyBook APIs and does not contact external services.
 
+After checkout, the Stripe webhook submits the booking; the return page does not create a second booking or verify its status. Contact the team to confirm the training. Webhook delivery requires the Stripe webhook configuration and SimplyBook credentials.
+
 Checkout accepts calendar dates in `YYYY-MM-DD` or `MMMM D, YYYY` format and times in 12-hour (`2:00 PM`) or 24-hour (`14:00` or `14:00:00`) format. Invalid dates and times are rejected before a payment session is created.
 
 Run `node --experimental-vm-modules scripts/test-waitlist-email.js` to check the waitlist inquiry email draft and form handoff. The waitlist form opens the visitor's email app; the visitor must send the draft to contact the team.

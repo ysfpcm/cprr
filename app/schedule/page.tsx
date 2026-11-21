@@ -186,31 +186,7 @@ export default function SchedulePage() {
     setIsSubmitting(true)
 
     try {
-      // Save booking details to localStorage before redirecting
       const selectedService = services.find(s => s.id === formData.service);
-
-      const bookingData = {
-        email: formData.email,
-        customerEmail: formData.email,
-        name: formData.name,
-        customerName: formData.name,
-        service: selectedService?.name || "",
-        date: date ? format(date, 'MMMM d, yyyy') : '',
-        time: formData.time,
-        participants: formData.participants,
-        phone: formData.phone,
-        unitId: 3, // Hardcode unitId to 3 (Dr. Dawn Mcclain)
-        simplybookEventId: selectedService?.simplybookId // Add the SimplyBookMe event ID
-      }
-      
-      // Save to localStorage for retrieval after payment with error handling
-      try {
-        localStorage.setItem('pendingBooking', JSON.stringify(bookingData))
-        console.log('Saved booking data to localStorage:', bookingData)
-      } catch (storageError) {
-        // Log but continue - we'll use URL params as fallback
-        console.error('Failed to save to localStorage:', storageError)
-      }
 
       // Create Stripe checkout session
       const response = await fetch('/api/stripe/checkout', {

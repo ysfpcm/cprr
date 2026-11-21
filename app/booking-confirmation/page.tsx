@@ -3,132 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Calendar, CheckCircle, Mail } from "lucide-react"
-import { useEffect, useState, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
-import { getSimplybookEventIdForService } from "../lib/services"
-
-// Create a client component that uses useSearchParams
-function BookingConfirmation() {
-  const searchParams = useSearchParams()
-  const sessionId = searchParams.get("session_id")
-  const [emailSent, setEmailSent] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  
-  useEffect(() => {
-    // Safe check for browser environment before using localStorage
-    if (typeof window === 'undefined') {
-      console.log("Running on server, skipping localStorage operations");
-      return;
-    }
-    
-    const sendConfirmationEmail = async () => {
-      setIsLoading(true);
-      
-      // Only attempt to process if we have a session ID
-      if (!sessionId) {
-        console.log("No session ID found in URL");
-        setError("Missing session information. Please contact customer support if you need assistance.");
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log("Session ID from URL:", sessionId);
-      const email = searchParams.get("email") || "";
-      
-      try {
-        let bookingData = null;
-        
-        // First, try to get booking data from localStorage
-        try {
-          const storedBookingData = localStorage.getItem("pendingBooking");
-          if (storedBookingData) {
-            bookingData = JSON.parse(storedBookingData);
-            console.log("Using booking data from localStorage:", bookingData);
-          }
-        } catch (storageError) {
-          console.warn("Error accessing localStorage:", storageError);
-          // Continue without localStorage data - we'll use the URL params instead
-        }
-        
-        // If no booking data from localStorage, use the URL params as fallback
-        if (!bookingData) {
-          console.log("No valid booking data from localStorage, using URL params");
-          bookingData = { 
-            email: email,
-            sessionId: sessionId 
-          };
-        }
-        
-        // If we still don't have an email, show an error
-        if (!email && !bookingData.email) {
-          setError("Missing contact information. Please contact customer support for assistance.");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Ensure we have an email (prefer localStorage data, but fallback to URL param)
-        if (!bookingData.email && email) {
-          bookingData.email = email;
-        }
-        
-        // Send booking data to SimplyBook.me via our API
-        try {
-          console.log("Sending booking data to SimplyBook.me via API");
-          const bookingApiResponse = await fetch("/api/bookings", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              clientName: bookingData.name || "Valued Customer",
-              email: bookingData.email,
-              phone: bookingData.phone || "",
-              service: bookingData.service || "CPR Training",
-              participants: parseInt(bookingData.participants || "1", 10),
-              date: bookingData.date,
-              time: bookingData.time || "12:00 PM",
-              unitId: bookingData.unitId,
-              status: "upcoming",
-              notes: `Booking confirmed via payment page.`,
-              sessionId: sessionId,
-              // Use simplybookEventId from the bookingData if available, otherwise map from service name
-              simplybookEventId: bookingData.simplybookEventId || getSimplybookEventIdForService(bookingData.service || "")
-            }),
-          });
-          
-          if (bookingApiResponse.ok) {
-            const result = await bookingApiResponse.json();
-            console.log("SimplyBook.me integration result:", result);
-            
-            // Set state to indicate booking was confirmed
-            setEmailSent(true);
-            
-            // Clear the pending booking data
-            try {
-              localStorage.removeItem("pendingBooking");
-            } catch (e) {
-              console.warn("Could not clear localStorage:", e);
-            }
-          } else {
-            console.error("Failed to send booking to SimplyBook.me:", await bookingApiResponse.text());
-            setError("There was a problem confirming your booking. Please contact us for assistance.");
-          }
-        } catch (bookingError) {
-          console.error("Error sending booking to SimplyBook.me:", bookingError);
-          setError("An unexpected error occurred. Please contact us to confirm your booking.");
-        }
-      } catch (error) {
-        console.error("Error processing booking confirmation:", error);
-        setError("An unexpected error occurred. Please contact us to confirm your booking.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    sendConfirmationEmail();
-  }, [sessionId, searchParams]);
-
+export default function BookingConfirmationPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -145,10 +20,10 @@ function BookingConfirmation() {
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-white">
-                Booking Confirmed!
+                Checkout Return
               </h1>
               <p className="mx-auto max-w-[700px] text-white md:text-xl">
-                Thank you for scheduling your training with Anytime CPR
+                Thank you for choosing Anytime CPR
               </p>
             </div>
           </motion.div>
@@ -165,21 +40,10 @@ function BookingConfirmation() {
             transition={{ duration: 0.5 }}
           >
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold">Your Training is Scheduled</h2>
-              {isLoading ? (
-                <p className="text-gray-500 mt-2">Processing your booking...</p>
-              ) : (
-                <p className="text-gray-500 mt-2">
-                  {emailSent 
-                    ? "Your booking is confirmed. You'll receive a confirmation email from Anytime CPR Health Services with all the details."
-                    : "Your booking is being processed. You should receive a confirmation email shortly."}
-                </p>
-              )}
-              {error && (
-                <p className="text-red-500 mt-2">
-                  {error}
-                </p>
-              )}
+              <h2 className="text-2xl font-bold">Booking Status</h2>
+              <p className="text-gray-500 mt-2">
+                If you completed payment, your booking is being processed. Please contact us to confirm your training before attending.
+              </p>
             </div>
 
             <div className="space-y-6">
@@ -245,14 +109,5 @@ function BookingConfirmation() {
         </div>
       </section>
     </div>
-  )
-}
-
-// Export the page component with Suspense boundary
-export default function BookingConfirmationPage() {
-  return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading confirmation details...</div>}>
-      <BookingConfirmation />
-    </Suspense>
   )
 }
