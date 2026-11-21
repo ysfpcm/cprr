@@ -178,7 +178,16 @@ export async function GET(request: Request) {
       })
     });
     
+    if (!timeSlotsResponse.ok) {
+      console.error('SimplyBook.me getStartTimeMatrix HTTP error:', timeSlotsResponse.status);
+      return NextResponse.json({ error: 'Failed to check time slots' }, { status: 502 });
+    }
+
     const timeSlotsResult = await timeSlotsResponse.json();
+    if (timeSlotsResult.error) {
+      console.error('SimplyBook.me getStartTimeMatrix error:', timeSlotsResult.error);
+      return NextResponse.json({ error: 'Failed to check time slots' }, { status: 502 });
+    }
     console.log('Raw SimplyBook.me getStartTimeMatrix response:', timeSlotsResult);
     const timeSlotsForDate: string[] = timeSlotsResult.result?.[dateParam] || [];
     
@@ -225,4 +234,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

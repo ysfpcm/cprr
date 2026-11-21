@@ -30,6 +30,8 @@ Checkout accepts calendar dates in `YYYY-MM-DD` or `MMMM D, YYYY` format and tim
 
 Run `node --experimental-vm-modules scripts/test-waitlist-email.js` to check the waitlist inquiry email draft and form handoff. The waitlist form opens the visitor's email app; the visitor must send the draft to contact the team.
 
+Run `node --experimental-vm-modules scripts/test-time-slots-route.js` to check that SimplyBook availability and upstream errors are reported correctly. The test uses mocked responses and does not contact external services.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
