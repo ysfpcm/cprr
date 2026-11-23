@@ -358,6 +358,7 @@ async function checkTimeSlotAvailability(
   eventId: number, 
   date: string, 
   time: string, // Expects HH:MM:SS format
+  unitId: number | null,
   companyLogin: string, 
   token: string
 ): Promise<boolean> {
@@ -388,7 +389,7 @@ async function checkTimeSlotAvailability(
             body: JSON.stringify({
                 jsonrpc: '2.0',
                 method: 'getStartTimeMatrix',
-                params: [date, date, numericEventId, null, 1],
+                params: [date, date, numericEventId, unitId, 1],
                 id: `check_${eventId}_${date}`
             })
         });
@@ -536,6 +537,7 @@ export async function POST(request: Request) {
           eventId, 
           formattedDate, 
           formattedTime, 
+          unitId,
           simplybookCompanyLogin, 
           token
         );

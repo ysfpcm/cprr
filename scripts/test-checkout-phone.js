@@ -136,7 +136,7 @@ test('checkout preserves the selected instructor for the webhook booking', async
   assert.equal(booking.unitId, 3);
 });
 
-async function createBookingsRoute(book = async () => Response.json({ result: { id: 'booking-1' } })) {
+async function createBookingsRoute(book = async () => Response.json({ result: { id: 'booking-1' } }), matrix) {
   const context = vm.createContext({
     process: { env: { SIMPLYBOOK_API_KEY: 'test-key', SIMPLYBOOK_COMPANY_LOGIN: 'test-company' } },
     console: { log() {}, warn() {}, error() {} },
@@ -149,6 +149,7 @@ async function createBookingsRoute(book = async () => Response.json({ result: { 
         getStartTimeMatrix: { '2026-11-20': ['14:00:00'] },
       };
       if (request.method === 'book') return book(request);
+      if (request.method === 'getStartTimeMatrix' && matrix) return matrix(request);
       if (!(request.method in results)) throw new Error(`Unexpected method: ${request.method}`);
       return Response.json({ result: results[request.method] });
     },
@@ -207,6 +208,57 @@ test('webhook booking sends the selected instructor to SimplyBook', async () => 
     metadata: checkout.metadata,
   });
   assert.equal(bookRequest.params[1], 3);
+});
+
+test('booking checks and suggests availability for the instructor being booked', async (t) => {
+  for (const [name, unitId, expectedUnitId] of [
+    ['selected instructor', 3, 3],
+    ['default instructor', undefined, 2],
+  ]) {
+    await t.test(name, async () => {
+      const matrixRequests = [];
+      let bookRequest;
+      const bookings = await createBookingsRoute(
+        async (request) => {
+          bookRequest = request;
+          return Response.json({ error: { message: 'Selected event id is not available' } });
+        },
+        (request) => {
+          matrixRequests.push(request);
+          if (request.id === 'alternative_timeslots') {
+            return Response.json({ result: { '2026-11-21': ['15:00:00'] } });
+          }
+          return Response.json({ result: { '2026-11-20': request.params[3] === null ? ['14:00:00'] : [] } });
+        },
+      );
+      const response = await bookings.post({
+        email: 'customer@example.com', service: 'BLS', simplybookEventId: 2,
+        date: '2026-11-20', time: '2:00 PM', unitId,
+      });
+      const result = await response.json();
+      assert.equal(response.status, 500);
+      assert.equal(bookRequest.params[1], expectedUnitId);
+      assert.equal(matrixRequests[0].params[3], expectedUnitId);
+      assert.equal(matrixRequests[1].params[3], expectedUnitId);
+      assert.deepEqual(result.alternativeTimes, [{ date: '2026-11-21', slots: ['15:00:00'] }]);
+    });
+  }
+});
+
+test('booking skips alternatives when the selected instructor is available', async () => {
+  const matrixRequests = [];
+  const bookings = await createBookingsRoute(undefined, (request) => {
+    matrixRequests.push(request);
+    return Response.json({ result: { '2026-11-20': ['14:00:00'] } });
+  });
+  const response = await bookings.post({
+    email: 'customer@example.com', service: 'BLS', simplybookEventId: 2,
+    date: '2026-11-20', time: '2:00 PM', unitId: 3,
+  });
+  assert.equal(response.status, 200);
+  assert.equal(matrixRequests.length, 1);
+  assert.equal(matrixRequests[0].params[3], 3);
+  assert.equal((await response.json()).alternativeTimes, undefined);
 });
 
 test('booking preserves international phone prefixes while formatting US numbers', async (t) => {
