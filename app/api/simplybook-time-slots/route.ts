@@ -183,13 +183,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to check time slots' }, { status: 502 });
     }
 
-    const timeSlotsResult = await timeSlotsResponse.json();
-    if (timeSlotsResult.error) {
-      console.error('SimplyBook.me getStartTimeMatrix error:', timeSlotsResult.error);
+    const timeSlotsResult = await timeSlotsResponse.json().catch(() => null);
+    const matrix = timeSlotsResult?.result;
+    const slots = matrix?.[dateParam];
+    if (timeSlotsResult?.error || !matrix || typeof matrix !== 'object' ||
+        (Array.isArray(matrix) && matrix.length > 0) ||
+        (slots !== undefined && (!Array.isArray(slots) || slots.some((slot: unknown) => typeof slot !== 'string')))) {
+      console.error('Invalid SimplyBook.me getStartTimeMatrix response:', timeSlotsResult);
       return NextResponse.json({ error: 'Failed to check time slots' }, { status: 502 });
     }
     console.log('Raw SimplyBook.me getStartTimeMatrix response:', timeSlotsResult);
-    const timeSlotsForDate: string[] = timeSlotsResult.result?.[dateParam] || [];
+    const timeSlotsForDate: string[] = slots || [];
     
     // Get a calendar with available dates
     const calendarResponse = await fetch('https://user-api.simplybook.me', {

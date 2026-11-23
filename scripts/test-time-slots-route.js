@@ -48,11 +48,30 @@ test('time slots preserve successful availability, including an empty schedule',
   }
 });
 
+test('time slots allow an empty matrix with no entry for the requested date', async (t) => {
+  for (const matrix of [{}, []]) {
+    await t.test(Array.isArray(matrix) ? 'empty array' : 'empty object', async () => {
+      const route = await loadRoute(() => Response.json({ result: matrix }));
+      const response = await route.get();
+      assert.equal(response.status, 200);
+      assert.deepEqual((await response.json()).availableTimeSlots, []);
+    });
+  }
+});
+
 test('time slots report upstream failures instead of an empty schedule', async (t) => {
   const failures = [
     ['JSON-RPC error', () => Response.json({ error: { message: 'Unavailable' } })],
     ['HTTP error with result', () => Response.json({ result: { '2026-11-20': [] } }, { status: 503 })],
     ['HTTP error with non-JSON body', () => new Response('Unavailable', { status: 503 })],
+    ['invalid JSON', () => new Response('Unavailable')],
+    ['null response', () => Response.json(null)],
+    ['missing matrix', () => Response.json({})],
+    ['null matrix', () => Response.json({ result: null })],
+    ['non-empty array matrix', () => Response.json({ result: ['14:00:00'] })],
+    ['null date entry', () => Response.json({ result: { '2026-11-20': null } })],
+    ['non-array date entry', () => Response.json({ result: { '2026-11-20': '14:00:00' } })],
+    ['non-string slot', () => Response.json({ result: { '2026-11-20': [null] } })],
   ];
   for (const [name, responseFactory] of failures) {
     await t.test(name, async () => {
